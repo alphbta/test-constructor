@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"test-constructor/internal/database"
 	"test-constructor/internal/models"
+	"test-constructor/utils"
 )
 
 type LoginRequest struct {
@@ -13,6 +14,12 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
+	Token   string `json:"token"`
+	UserID  uint   `json:"user_id"`
+	Email   string `json:"email"`
+	Name    string `json:"name"`
+	Surname string `json:"surname"`
+	Role    int    `json:"role"`
 	Message string `json:"message"`
 }
 
@@ -40,8 +47,20 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	token, err := utils.GenerateJWT(user.ID, user.Email, user.Name, user.Surname, int(user.Role))
+	if err != nil {
+		http.Error(w, "Ошибка при создании токена", http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(w).Encode(LoginResponse{
+		Token:   token,
+		UserID:  user.ID,
+		Email:   user.Email,
+		Name:    user.Name,
+		Surname: user.Surname,
+		Role:    int(user.Role),
 		Message: "Вы вошли",
 	})
 }
