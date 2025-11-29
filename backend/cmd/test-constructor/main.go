@@ -19,6 +19,8 @@ func main() {
 
 	r.HandleFunc("/register", handlers.Register).Methods("POST")
 	r.HandleFunc("/login", handlers.Login).Methods("POST")
+	r.HandleFunc("/", handlers.GetTests).Methods("GET")
+	r.HandleFunc("/tests/{id}", handlers.DeleteTest).Methods("POST")
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{clientURL},
