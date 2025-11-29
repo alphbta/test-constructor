@@ -22,10 +22,7 @@ func Connect() {
 
 	DB = connection
 
-	err = DB.AutoMigrate(
-		&models.User{},
-		&models.Test{},
-	)
+	err = DB.AutoMigrate(&models.User{})
 	if err != nil {
 		log.Fatal("Ошибка миграции базы данных", err)
 	}
