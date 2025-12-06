@@ -29,7 +29,7 @@ function Login() {
 
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(userData));
-            nav('/');
+            nav('/tests');
         } catch (error) {
             setError(error.response.data);
             return;
