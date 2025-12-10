@@ -3,8 +3,10 @@ package main
 import (
 	"log"
 	"net/http"
+	"test-constructor/internal/auth"
 	"test-constructor/internal/database"
 	"test-constructor/internal/handlers"
+	"test-constructor/internal/middleware"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -17,8 +19,18 @@ func main() {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/register", handlers.Register).Methods("POST")
-	r.HandleFunc("/login", handlers.Login).Methods("POST")
+	r.HandleFunc("/register", auth.RegistrationHandler).Methods("POST")
+	r.HandleFunc("/login", auth.LoginHandler).Methods("POST")
+
+	api := r.PathPrefix("/api").Subrouter()
+	api.Use(middleware.AuthMiddleware)
+
+	manager := api.PathPrefix("/manager").Subrouter()
+	manager.HandleFunc("/tests", handlers.ManagerTestHandler).Methods("GET")
+	manager.HandleFunc("/tests/{id}", handlers.DeleteTest).Methods("POST")
+
+	intern := api.PathPrefix("/intern").Subrouter()
+	intern.HandleFunc("/tests", handlers.InternAttemptHandler).Methods("GET")
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{clientURL},

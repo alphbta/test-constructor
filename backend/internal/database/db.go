@@ -5,6 +5,7 @@ import (
 	"log"
 	"test-constructor/config"
 	"test-constructor/internal/models"
+	"test-constructor/migrations"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -22,9 +23,24 @@ func Connect() {
 
 	DB = connection
 
-	err = DB.AutoMigrate(&models.User{})
+	err = DB.AutoMigrate(
+		&models.User{},
+		&models.Test{},
+		&models.Question{},
+		&models.Answer{},
+		&models.Role{},
+		&models.Attempt{},
+	)
 	if err != nil {
 		log.Fatal("Ошибка миграции базы данных", err)
+	}
+
+	if err := migrations.SeedRoles(DB); err != nil {
+		log.Fatal("Не удалось заполнить роли:", err)
+	}
+
+	if err := migrations.SeedAdmin(DB); err != nil {
+		log.Fatal("Не удалось создать админа", err)
 	}
 
 	log.Println("База данных подключена")
