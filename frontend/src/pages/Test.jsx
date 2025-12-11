@@ -2,6 +2,11 @@ import "../styles/tests.css";
 import LogoutButton from "../components/LogoutButton.jsx";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import EditIcon from "../assets/edit.svg?react";
+import ShareIcon from "../assets/share.svg?react";
+import StatisticsIcon from "../assets/statistics.svg?react";
+import DeleteIcon from "../assets/close.svg?react";
+
 
 export default function Tests() {
     const navigate = useNavigate();
@@ -63,16 +68,14 @@ export default function Tests() {
     };
 
     return (
-
-        <div className="tests-wrapper">
+        <div className="tests-page">
             <>
                 <LogoutButton />
             </>
+        <div className="tests-wrapper">
             <div className="tests-left">
-                <div className="tests-header">
                     <h2>Мои тесты</h2>
                     <div className="tests-line"></div>
-                </div>
 
                 {tests.length === 0 ? (
                     <div className="no-tests">
@@ -81,7 +84,11 @@ export default function Tests() {
                 ) : (
                     <div className="tests-grid">
                         {tests.map((test) => (
-                            <div key={test.id} className="test-card">
+                            <div key={test.id} className="test-card"
+                                 style={{
+                                     zIndex: openMenuId === test.id ? 100 : 1
+                                 }}
+                            >
                                 <div
                                     className="test-menu-container"
                                     ref={el => menuRefs.current[test.id] = el}
@@ -96,29 +103,35 @@ export default function Tests() {
                                     {openMenuId === test.id && (
                                         <div className="dropdown-menu">
                                             <button className="menu-item" onClick={() => editTest(test)}>
-                                                <span className="menu-icon">🗑️</span>
+                                                <EditIcon className="menu-icon" />
                                                 <span>Редактировать</span>
                                             </button>
                                             <button className="menu-item share" onClick={() => shareTest(test.id)}>
-                                                <span className="menu-icon">🗑️</span>
+                                                <ShareIcon className="menu-icon" />
                                                 <span>Поделиться</span>
                                             </button>
+                                            {/* тут поменять с клос на нормальынй */}
                                             <button className="menu-item" onClick={() => closeTest(test.id)}>
-                                                <span className="menu-icon">©</span>
+                                                <StatisticsIcon className="menu-icon" />
+                                                <span>Статистика</span>
+                                            </button>
+                                            <button className="menu-item" onClick={() => deleteTest(test.id)}>
+                                                <DeleteIcon className="menu-icon" />
                                                 <span>Закрыть тест</span>
                                             </button>
-                                            <div className="menu-divider"></div>
-                                            <button className="menu-item delete" onClick={() => deleteTest(test.id)}>
-                                                <span className="menu-icon">🗑️</span>
-                                                <span>Удалить</span>
-                                            </button>
+                                            {/*<div className="menu-divider"></div>*/}
+                                            {/*<button className="menu-item delete" onClick={() => deleteTest(test.id)}>*/}
+                                            {/*    <span className="menu-icon">🗑️</span>*/}
+                                            {/*    <span>Удалить</span>*/}
+                                            {/*</button>*/}
                                         </div>
                                     )}
                                 </div>
-
-                                <div className="test-title-wrapper">
-                                    <span className="test-title">{test.title}</span>
-                                </div>
+                                    <span className="test-titles">
+                                        {test.title.length > 15
+                                        ? `${test.title.substring(0, 15)}...`
+                                        : test.title
+                                    }</span>
                             </div>
                         ))}
                     </div>
@@ -130,6 +143,7 @@ export default function Tests() {
                     Создать тест
                 </button>
             </div>
+        </div>
         </div>
     );
 }
