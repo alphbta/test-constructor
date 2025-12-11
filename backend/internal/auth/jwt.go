@@ -1,17 +1,25 @@
-package utils
+package auth
 
 import (
 	"test-constructor/config"
-	"test-constructor/internal/models"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 )
 
-func GenerateJWT(userID uint, email, name, surname string, role int) (string, error) {
+type JWTClaims struct {
+	UserID  uint   `json:"user_id"`
+	Email   string `json:"email"`
+	Name    string `json:"name"`
+	Surname string `json:"surname"`
+	Role    string `json:"role"`
+	jwt.RegisteredClaims
+}
+
+func GenerateJWT(userID uint, email, name, surname string, role string) (string, error) {
 	cfg := config.Load()
 
-	claims := &models.JWTClaims{
+	claims := &JWTClaims{
 		UserID:  userID,
 		Email:   email,
 		Name:    name,
@@ -29,10 +37,10 @@ func GenerateJWT(userID uint, email, name, surname string, role int) (string, er
 	return token.SignedString([]byte(cfg.JWTSecret))
 }
 
-func ValidateJWT(tokenString string) (*models.JWTClaims, error) {
+func ValidateJWT(tokenString string) (*JWTClaims, error) {
 	cfg := config.Load()
 
-	token, err := jwt.ParseWithClaims(tokenString, &models.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(cfg.JWTSecret), nil
 	})
 
@@ -40,7 +48,7 @@ func ValidateJWT(tokenString string) (*models.JWTClaims, error) {
 		return nil, err
 	}
 
-	if claims, ok := token.Claims.(*models.JWTClaims); ok && token.Valid {
+	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
 		return claims, nil
 	}
 

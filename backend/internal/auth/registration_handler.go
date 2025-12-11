@@ -1,11 +1,10 @@
-package handlers
+package auth
 
 import (
 	"encoding/json"
 	"net/http"
 	"test-constructor/internal/database"
 	"test-constructor/internal/models"
-	"test-constructor/utils"
 )
 
 type RegisterRequest struct {
@@ -21,11 +20,11 @@ type RegisterResponse struct {
 	Email   string `json:"email"`
 	Name    string `json:"name"`
 	Surname string `json:"surname"`
-	Role    int    `json:"role"`
+	Role    string `json:"role"`
 	Message string `json:"message"`
 }
 
-func Register(w http.ResponseWriter, r *http.Request) {
+func RegistrationHandler(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -38,11 +37,17 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var role models.Role
+	if err := database.DB.Where("code = ?", "intern").First(&role).Error; err != nil {
+		http.Error(w, "Ошибка при запросе роли", http.StatusInternalServerError)
+	}
+
 	user := models.User{
 		Email:   req.Email,
 		Name:    req.Name,
 		Surname: req.Surname,
-		Role:    models.RoleIntern,
+		RoleID:  role.ID,
+		Role:    role,
 	}
 
 	if err := user.HashPassword(req.Password); err != nil {
@@ -56,7 +61,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := utils.GenerateJWT(user.ID, user.Email, user.Name, user.Surname, int(user.Role))
+	token, err := GenerateJWT(user.ID, user.Email, user.Name, user.Surname, user.Role.Code)
 	if err != nil {
 		http.Error(w, "Ошибка при создании токена", http.StatusInternalServerError)
 		return
@@ -70,7 +75,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		Email:   user.Email,
 		Name:    user.Name,
 		Surname: user.Surname,
-		Role:    int(user.Role),
+		Role:    user.Role.Code,
 		Message: "Пользователь создан",
 	})
 }

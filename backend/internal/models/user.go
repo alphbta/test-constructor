@@ -5,47 +5,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type Role int
-
-const (
-	RoleIntern Role = iota + 1
-	RoleManager
-	RoleAdmin
-)
-
-func (r Role) String() string {
-	switch r {
-	case RoleIntern:
-		return "intern"
-	case RoleManager:
-		return "manager"
-	case RoleAdmin:
-		return "admin"
-	default:
-		return "unknown"
-	}
-}
-
-func ParseRole(s string) Role {
-	switch s {
-	case "intern":
-		return RoleIntern
-	case "manager":
-		return RoleManager
-	case "admin":
-		return RoleAdmin
-	default:
-		return RoleIntern
-	}
-}
-
 type User struct {
 	gorm.Model
-	Email    string `gorm:"uniqueIndex" json:"email"`
-	Name     string `json:"name"`
-	Surname  string `json:"surname"`
+	Email    string `gorm:"uniqueIndex;not null" json:"email"`
+	Name     string `gorm:"not null" json:"name"`
+	Surname  string `gorm:"not null" json:"surname"`
 	Password string `gorm:"not null" json:"-"`
-	Role     Role   `json:"role"`
+	RoleID   uint   `gorm:"not null" json:"role_id"`
+	// Связи
+	Role Role
 }
 
 func (u *User) HashPassword(password string) error {

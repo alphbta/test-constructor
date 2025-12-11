@@ -1,11 +1,10 @@
-package handlers
+package auth
 
 import (
 	"encoding/json"
 	"net/http"
 	"test-constructor/internal/database"
 	"test-constructor/internal/models"
-	"test-constructor/utils"
 )
 
 type LoginRequest struct {
@@ -19,11 +18,11 @@ type LoginResponse struct {
 	Email   string `json:"email"`
 	Name    string `json:"name"`
 	Surname string `json:"surname"`
-	Role    int    `json:"role"`
+	Role    string `json:"role"`
 	Message string `json:"message"`
 }
 
-func Login(w http.ResponseWriter, r *http.Request) {
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -47,7 +46,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := utils.GenerateJWT(user.ID, user.Email, user.Name, user.Surname, int(user.Role))
+	token, err := GenerateJWT(user.ID, user.Email, user.Name, user.Surname, user.Role.Code)
 	if err != nil {
 		http.Error(w, "Ошибка при создании токена", http.StatusInternalServerError)
 		return
@@ -60,7 +59,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		Email:   user.Email,
 		Name:    user.Name,
 		Surname: user.Surname,
-		Role:    int(user.Role),
+		Role:    user.Role.Code,
 		Message: "Вы вошли",
 	})
 }
