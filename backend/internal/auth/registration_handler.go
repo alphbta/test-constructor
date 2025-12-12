@@ -24,6 +24,14 @@ type RegisterResponse struct {
 	Message string `json:"message"`
 }
 
+// @Summary Создать пользователя
+// @Description Создать нового пользователя
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param user body RegisterRequest true "User object"
+// @Success 201 {object} RegisterResponse
+// @Router /register [post]
 func RegistrationHandler(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
 

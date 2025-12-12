@@ -5,15 +5,28 @@ import (
 	"net/http"
 	"test-constructor/internal/auth"
 	"test-constructor/internal/database"
-	"test-constructor/internal/handlers"
+	"test-constructor/internal/handlers/intern"
+	"test-constructor/internal/handlers/manager"
 	"test-constructor/internal/middleware"
+
+	_ "test-constructor/docs"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 const clientURL = "http://localhost:5173"
 
+// @title test constructor
+// @version 1.0
+// @description backend part of test constructor
+// @host localhost:8080
+// @BasePath /
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	database.Connect()
 
@@ -25,12 +38,15 @@ func main() {
 	api := r.PathPrefix("/api").Subrouter()
 	api.Use(middleware.AuthMiddleware)
 
-	manager := api.PathPrefix("/manager").Subrouter()
-	manager.HandleFunc("/tests", handlers.ManagerTestHandler).Methods("GET")
-	manager.HandleFunc("/tests/{id}", handlers.DeleteTest).Methods("POST")
+	m := api.PathPrefix("/manager").Subrouter()
+	m.HandleFunc("/tests", manager.ManagerTestHandler).Methods("GET")
+	m.HandleFunc("/tests", manager.CreateTest).Methods("POST")
+	m.HandleFunc("/tests/delete/{id}", manager.DeleteTest).Methods("POST")
 
-	intern := api.PathPrefix("/intern").Subrouter()
-	intern.HandleFunc("/tests", handlers.InternAttemptHandler).Methods("GET")
+	i := api.PathPrefix("/intern").Subrouter()
+	i.HandleFunc("/tests", intern.InternAttemptHandler).Methods("GET")
+
+	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{clientURL},

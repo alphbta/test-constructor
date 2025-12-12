@@ -1,0 +1,299 @@
+basePath: /
+definitions:
+  auth.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  auth.LoginResponse:
+    properties:
+      email:
+        type: string
+      message:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+      surname:
+        type: string
+      token:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  auth.RegisterRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      surname:
+        type: string
+    type: object
+  auth.RegisterResponse:
+    properties:
+      email:
+        type: string
+      message:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+      surname:
+        type: string
+      token:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  manager.CreateQuestionInfo:
+    properties:
+      options:
+        $ref: '#/definitions/models.QuestionOptions'
+      order_number:
+        type: integer
+      points:
+        type: integer
+      text:
+        type: string
+      type:
+        type: string
+    type: object
+  manager.CreateTestInfo:
+    properties:
+      complete_time:
+        type: integer
+      description:
+        type: string
+      fail_text:
+        type: string
+      is_percentage:
+        type: boolean
+      questions:
+        items:
+          $ref: '#/definitions/manager.CreateQuestionInfo'
+        type: array
+      success_text:
+        type: string
+      threshold:
+        type: integer
+      title:
+        type: string
+    type: object
+  manager.TestInfo:
+    properties:
+      complete_time:
+        type: integer
+      creator_id:
+        type: integer
+      description:
+        type: string
+      fail_text:
+        type: string
+      is_active:
+        type: boolean
+      is_percentage:
+        type: boolean
+      success_text:
+        type: string
+      test_id:
+        type: integer
+      test_link:
+        type: string
+      threshold:
+        type: integer
+      title:
+        type: string
+    type: object
+  manager.TestsInfoResponse:
+    properties:
+      tests:
+        items:
+          $ref: '#/definitions/manager.TestInfo'
+        type: array
+    type: object
+  models.ChoiceOption:
+    properties:
+      is_true:
+        type: boolean
+      text:
+        type: string
+    type: object
+  models.MatchingPair:
+    properties:
+      left:
+        type: string
+      right:
+        type: string
+    type: object
+  models.QuestionOptions:
+    properties:
+      case_sensitive:
+        type: boolean
+      choice:
+        items:
+          $ref: '#/definitions/models.ChoiceOption'
+        type: array
+      correct_input:
+        items:
+          type: string
+        type: array
+      matching:
+        items:
+          $ref: '#/definitions/models.MatchingPair'
+        type: array
+      sequence:
+        items:
+          $ref: '#/definitions/models.SequenceItem'
+        type: array
+    type: object
+  models.SequenceItem:
+    properties:
+      order:
+        type: integer
+      text:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: backend part of test constructor
+  title: test constructor
+  version: "1.0"
+paths:
+  /api/manager/tests:
+    get:
+      description: Получить список тестов
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manager.TestsInfoResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Получить тесты для организотора
+      tags:
+      - manager
+    post:
+      consumes:
+      - application/json
+      description: Создать новый тест
+      parameters:
+      - description: Test object
+        in: body
+        name: test
+        required: true
+        schema:
+          $ref: '#/definitions/manager.CreateTestInfo'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Создать тест
+      tags:
+      - manager
+  /api/manager/tests/delete/{id}:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID теста
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
+      security:
+      - ApiKeyAuth: []
+      summary: Удалить тест
+      tags:
+      - manager
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Логин
+      parameters:
+      - description: User object
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/auth.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/auth.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Вход
+      tags:
+      - users
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Создать нового пользователя
+      parameters:
+      - description: User object
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/auth.RegisterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Создать пользователя
+      tags:
+      - users
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

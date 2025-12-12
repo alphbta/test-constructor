@@ -1,6 +1,8 @@
 package models
 
 import (
+	"errors"
+
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -26,6 +28,17 @@ const (
 	Matching       QType = "matching"
 	CorrectOrder   QType = "correct_order"
 )
+
+func ParseQType(s string) (QType, error) {
+	qType := QType(s)
+	switch qType {
+	case SingleChoice, MultipleChoice, TextInput, Matching, CorrectOrder:
+	default:
+		return qType, errors.New("Неверный тип вопроса: " + s)
+	}
+
+	return qType, nil
+}
 
 type QuestionOptions struct {
 	Choices       []ChoiceOption `json:"choice,omitempty"`

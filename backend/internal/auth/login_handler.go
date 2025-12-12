@@ -22,6 +22,14 @@ type LoginResponse struct {
 	Message string `json:"message"`
 }
 
+// @Summary Вход
+// @Description Логин
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param user body LoginRequest true "User object"
+// @Success 200 {object} LoginResponse
+// @Router /login [post]
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 
@@ -36,7 +44,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user models.User
-	if err := database.DB.Where("email = ?", req.Email).First(&user).Error; err != nil {
+	if err := database.DB.Preload("Role").Where("email = ?", req.Email).First(&user).Error; err != nil {
 		http.Error(w, "Неправильный логин или пароль", http.StatusUnauthorized)
 		return
 	}
