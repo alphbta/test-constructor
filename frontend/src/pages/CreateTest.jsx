@@ -13,183 +13,14 @@ import {
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { useNavigate, useLocation } from "react-router-dom";
+import SortableQuestion from "../components/Question";
+import PassingCriteria from "../components/questions/PassingCriteria.jsx";
+import ResultMessages from "../components/questions/ResultMessages";
 import "../styles/createTest.css";
+import LogoutButton from "../components/LogoutButton.jsx";
 
-function SortableQuestion({ question, updateQuestion, deleteQuestion }) {
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({ id: question.id });
 
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
-    };
-
-    return (
-        <div ref={setNodeRef} style={style} className="question-block">
-            <div className="q-header">
-                <span>
-                    <span {...attributes} {...listeners} className="drag-handle">
-                        ⋮⋮
-                    </span>{" "}
-                    {question.order}. Введите вопрос
-                </span>
-                <div className="q-icons">
-                    <span onClick={() => deleteQuestion(question.id)}>🗑️</span>
-                </div>
-            </div>
-
-            <input
-                className="q-input"
-                placeholder="Текст вопроса..."
-                value={question.text}
-                onChange={(e) =>
-                    updateQuestion(question.id, "text", e.target.value)
-                }
-            />
-
-            {question.type === "yesNo" && (
-                <div className="q-options">
-                    <label>
-                        <input type="radio" name={`yesNo-${question.id}`} /> Да
-                    </label>
-                    <label>
-                        <input type="radio" name={`yesNo-${question.id}`} /> Нет
-                    </label>
-                </div>
-            )}
-
-            {question.type === "multipleChoice" && (
-                <div className="q-options">
-                    {question.options.map((option, idx) => (
-                        <label key={idx}>
-                            <input type="checkbox" />{" "}
-                            <input
-                                type="text"
-                                placeholder={`Вариант ${idx + 1}`}
-                                value={option}
-                                onChange={(e) => {
-                                    const newOptions = [...question.options];
-                                    newOptions[idx] = e.target.value;
-                                    updateQuestion(question.id, "options", newOptions);
-                                }}
-                            />
-                        </label>
-                    ))}
-                    <button
-                        className="add-option-btn"
-                        onClick={() =>
-                            updateQuestion(question.id, "options", [
-                                ...question.options,
-                                "",
-                            ])
-                        }
-                    >
-                        + Добавить вариант
-                    </button>
-                </div>
-            )}
-
-            {question.type === "singleChoice" && (
-                <div className="q-options">
-                    {question.options.map((option, idx) => (
-                        <label key={idx}>
-                            <input type="radio" name={`single-${question.id}`} />{" "}
-                            <input
-                                type="text"
-                                placeholder={`Вариант ${idx + 1}`}
-                                value={option}
-                                onChange={(e) => {
-                                    const newOptions = [...question.options];
-                                    newOptions[idx] = e.target.value;
-                                    updateQuestion(question.id, "options", newOptions);
-                                }}
-                            />
-                        </label>
-                    ))}
-                    <button
-                        className="add-option-btn"
-                        onClick={() =>
-                            updateQuestion(question.id, "options", [
-                                ...question.options,
-                                "",
-                            ])
-                        }
-                    >
-                        + Добавить вариант
-                    </button>
-                </div>
-            )}
-
-            {question.type === "shortText" && (
-                <div className="q-options">
-                    <input
-                        type="text"
-                        className="short-text-input"
-                        placeholder="Короткий ответ..."
-                        disabled
-                    />
-                </div>
-            )}
-
-            {question.type === "longText" && (
-                <>
-                    <textarea
-                        className="q-textarea"
-                        placeholder="Длинный ответ..."
-                        disabled
-                    />
-                    <div className="q-mode">
-                        <span>Режим проверки</span>
-                        <label>
-                            <input
-                                type="radio"
-                                name={`mode-${question.id}`}
-                                checked={question.checkMode === "auto"}
-                                onChange={() =>
-                                    updateQuestion(question.id, "checkMode", "auto")
-                                }
-                            />{" "}
-                            Автоматическая
-                        </label>
-                        <label>
-                            <input
-                                type="radio"
-                                name={`mode-${question.id}`}
-                                checked={question.checkMode === "manual"}
-                                onChange={() =>
-                                    updateQuestion(question.id, "checkMode", "manual")
-                                }
-                            />{" "}
-                            Ручная
-                        </label>
-                    </div>
-                </>
-            )}
-
-            <div className="q-score">
-                Максимальный балл:{" "}
-                <input
-                    type="number"
-                    className="score-input"
-                    value={question.maxScore}
-                    onChange={(e) =>
-                        updateQuestion(question.id, "maxScore", parseInt(e.target.value) || 0)
-                    }
-                />
-            </div>
-        </div>
-    );
-}
 
 function useAppSensors() {
     const pointerSensor = useSensor(PointerSensor);
@@ -209,41 +40,102 @@ export default function CreateTest() {
 
     const [title, setTitle] = useState(isEditing ? editingTest.title : "");
     const [description, setDescription] = useState(isEditing ? editingTest.description : "");
+
+    const [passingCriteria, setPassingCriteria] = useState(
+        isEditing ? editingTest.passingCriteria || {
+            type: "percentage",
+            percentage: 75,
+            points: 0,
+        } : {
+            type: "percentage",
+            percentage: 75,
+            points: 0,
+        }
+    );
+
+    const [resultMessages, setResultMessages] = useState(
+        isEditing ? editingTest.resultMessages || {
+            success: "",
+            failure: ""
+        } : {
+            success: "",
+            failure: ""
+        }
+    );
+
     const [questions, setQuestions] = useState(
         isEditing ? editingTest.questions.map((q, idx) => ({
             id: `q-${idx}-${Date.now()}`,
             order: idx + 1,
             type: q.type,
             text: q.text,
-            options: q.options || (q.type === "yesNo" ? ["Да", "Нет"] : ["", ""]),
-            maxScore: q.maxScore || 10,
-            checkMode: q.checkMode || (q.type === "longText" ? "manual" : "auto"),
+            ...(q.type === "shortText" && {
+                correctAnswers: q.correctAnswers || [""],
+                caseSensitive: q.caseSensitive || false
+            }),
+            ...(q.type === "singleChoice" && {
+                options: q.options || [{ text: "", isCorrect: false }]
+            }),
+            ...(q.type === "multipleChoice" && {
+                options: q.options || [{ text: "", isCorrect: false }],
+                scoringType: q.scoringType || "allOrNothing"
+            }),
+            ...(q.type === "matching" && {
+                rows: q.rows || [{ option: "", answer: "" }]
+            }),
+            ...(q.type === "ordering" && {
+                items: q.items || [{ text: "" }]
+            }),
+            maxScore: q.maxScore || 15,
         })) : [
             {
                 id: "1",
                 order: 1,
-                type: "yesNo",
-                text: "Пример вопроса Да/Нет?",
-                options: ["Да", "Нет"],
+                type: "shortText",
+                text: "",
+                correctAnswers: [""],
+                caseSensitive: false,
                 maxScore: 15,
-                checkMode: "auto",
             },
         ]
     );
 
+    const calculateTotalPoints = () => {
+        return questions.reduce((sum, q) => sum + (q.maxScore || 0), 0);
+    };
+
     const sensors = useAppSensors();
 
     const addQuestion = (type) => {
-        const newQuestion = {
+        const baseQuestion = {
             id: Date.now().toString(),
             order: questions.length + 1,
             type,
             text: "",
-            options: type === "yesNo" ? ["Да", "Нет"] : ["", ""],
-            maxScore: 10,
-            checkMode: type === "longText" ? "manual" : "auto",
+            maxScore: 15,
         };
-        setQuestions([...questions, newQuestion]);
+
+        switch (type) {
+            case "shortText":
+                baseQuestion.correctAnswers = [""];
+                baseQuestion.caseSensitive = false;
+                break;
+            case "singleChoice":
+                baseQuestion.options = [{ text: "", isCorrect: false }];
+                break;
+            case "multipleChoice":
+                baseQuestion.options = [{ text: "", isCorrect: false }];
+                baseQuestion.scoringType = "allOrNothing";
+                break;
+            case "matching":
+                baseQuestion.rows = [{ option: "", answer: "" }];
+                break;
+            case "ordering":
+                baseQuestion.items = [{ text: "" }];
+                break;
+        }
+
+        setQuestions([...questions, baseQuestion]);
     };
 
     const updateQuestion = (id, field, value) => {
@@ -286,12 +178,32 @@ export default function CreateTest() {
             title: title.trim(),
             description: description.trim(),
             createdAt: isEditing ? editingTest.createdAt : new Date().toISOString(),
+            passingCriteria: {
+                ...passingCriteria,
+                totalPoints: calculateTotalPoints()
+            },
+            resultMessages,
             questions: questions.map((q) => ({
                 type: q.type,
                 text: q.text,
-                options: q.options,
                 maxScore: q.maxScore,
-                checkMode: q.checkMode,
+                ...(q.type === "shortText" && {
+                    correctAnswers: q.correctAnswers,
+                    caseSensitive: q.caseSensitive
+                }),
+                ...(q.type === "singleChoice" && {
+                    options: q.options
+                }),
+                ...(q.type === "multipleChoice" && {
+                    options: q.options,
+                    scoringType: q.scoringType
+                }),
+                ...(q.type === "matching" && {
+                    rows: q.rows
+                }),
+                ...(q.type === "ordering" && {
+                    items: q.items
+                }),
             })),
         };
 
@@ -314,22 +226,23 @@ export default function CreateTest() {
     };
 
     const questionTypes = [
-        { key: "shortText", label: "Ввод короткого текста" },
-        { key: "longText", label: "Ввод длинного текста" },
+        { key: "shortText", label: "Задания на ручной ввод" },
         { key: "singleChoice", label: "Одиночный выбор" },
-        { key: "yesNo", label: "Да / Нет" },
         { key: "multipleChoice", label: "Множественный выбор" },
-        { key: "", label: "Выпадающий список"},
-        { key: "", label: "Выбор картинки"},
+        { key: "matching", label: "На соотношение"},
+        { key: "ordering", label: "На расположение в правильном порядке"},
     ];
 
     return (
+        <div className="tests-page">
+            <div className="test-page" style={{ position: 'absolute', left: '1430px', top: '0px' }}>
+                <LogoutButton />
+            </div>
         <div className="create-wrapper">
-            {/* Левая часть */}
             <div className="create-left">
                 <input
                     className="test-title"
-                    placeholder="Название теста"
+                    placeholder="Название"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                 />
@@ -338,6 +251,13 @@ export default function CreateTest() {
                     placeholder="Описание теста"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
+                />
+                <div className="tests-line"></div>
+
+                <PassingCriteria
+                    criteria={passingCriteria}
+                    updateCriteria={setPassingCriteria}
+                    totalPoints={calculateTotalPoints()}
                 />
 
                 <DndContext
@@ -360,11 +280,18 @@ export default function CreateTest() {
                     </SortableContext>
                 </DndContext>
 
+
+                <ResultMessages
+                    messages={resultMessages}
+                    updateMessages={setResultMessages}
+                />
+
             </div>
 
-            {/* Правая панель */}
             <div className="create-right">
-                <button className="save-btn" onClick={handleSave}> {isEditing ? "Сохранить" : "Сохранить"} </button>
+                <button className="save-btn" onClick={handleSave}>
+                    {isEditing ? "Сохранить" : "Сохранить"}
+                </button>
 
                 <h3>Поля теста</h3>
 
@@ -380,16 +307,16 @@ export default function CreateTest() {
                         </button>
                     ))}
                 </div>
-
-                <div className="right-section">
+                <div className="time-box">
                     <p>Установить время</p>
-                    <div className="time-box">
-                        <input type="number" min="0" placeholder="0" /> ч
-                        <input type="number" min="0" max="59" placeholder="0" /> м
-                        <input type="number" min="0" max="59" placeholder="0" /> с
+                    <div className="time-inputs-box">
+                        <input type="number" min="0" placeholder="0 ч"/>
+                        <input type="number" min="0" max="59" placeholder="0 м" />
+                        <input type="number" min="0" max="59" placeholder="0 с" />
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     );
 }
