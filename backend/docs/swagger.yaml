@@ -1,5 +1,31 @@
 basePath: /
 definitions:
+  admin.CreateManagerRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      surname:
+        type: string
+    type: object
+  admin.CreateManagerResponse:
+    properties:
+      email:
+        type: string
+      message:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+      surname:
+        type: string
+      user_id:
+        type: integer
+    type: object
   auth.LoginRequest:
     properties:
       email:
@@ -167,6 +193,30 @@ info:
   title: test constructor
   version: "1.0"
 paths:
+  /api/admin/manager/create:
+    post:
+      consumes:
+      - application/json
+      description: Создать нового организатора
+      parameters:
+      - description: Manager object
+        in: body
+        name: test
+        required: true
+        schema:
+          $ref: '#/definitions/admin.CreateManagerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/admin.CreateManagerResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Создать организатора
+      tags:
+      - admin
   /api/manager/tests:
     get:
       description: Получить список тестов
@@ -228,8 +278,6 @@ paths:
       responses:
         "200":
           description: OK
-        "500":
-          description: Internal Server Error
       security:
       - ApiKeyAuth: []
       summary: Удалить тест
@@ -250,16 +298,10 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
             $ref: '#/definitions/auth.LoginResponse'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
       summary: Вход
       tags:
       - users
@@ -282,12 +324,6 @@ paths:
           description: Created
           schema:
             $ref: '#/definitions/auth.RegisterResponse'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
       summary: Создать пользователя
       tags:
       - users

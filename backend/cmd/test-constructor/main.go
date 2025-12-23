@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"test-constructor/internal/auth"
 	"test-constructor/internal/database"
+	"test-constructor/internal/handlers/admin"
 	"test-constructor/internal/handlers/intern"
 	"test-constructor/internal/handlers/manager"
 	"test-constructor/internal/middleware"
@@ -45,6 +46,10 @@ func main() {
 
 	i := api.PathPrefix("/intern").Subrouter()
 	i.HandleFunc("/tests", intern.InternAttemptHandler).Methods("GET")
+
+	a := api.PathPrefix("/admin").Subrouter()
+	a.Use(middleware.AdminMiddleware)
+	a.HandleFunc("/manager/create", admin.CreateManager).Methods("POST")
 
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
