@@ -19,7 +19,7 @@ type InternAttemptResponse struct {
 	AttemptsInfo []AttemptInfo `json:"attempts"`
 }
 
-func InternAttemptHandler(w http.ResponseWriter, r *http.Request) {
+func GetAttempts(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(middleware.UserContextKey).(*auth.JWTClaims)
 	if !ok {
 		http.Error(w, "Authentication failed", http.StatusUnauthorized)

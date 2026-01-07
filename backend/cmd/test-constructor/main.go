@@ -33,19 +33,23 @@ func main() {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/register", auth.RegistrationHandler).Methods("POST")
-	r.HandleFunc("/login", auth.LoginHandler).Methods("POST")
+	r.HandleFunc("/register", auth.Registration).Methods("POST")
+	r.HandleFunc("/login", auth.Login).Methods("POST")
 
 	api := r.PathPrefix("/api").Subrouter()
 	api.Use(middleware.AuthMiddleware)
 
 	m := api.PathPrefix("/manager").Subrouter()
-	m.HandleFunc("/tests", manager.ManagerTestHandler).Methods("GET")
+	m.Use(middleware.ManagerMiddleware)
+	m.HandleFunc("/tests", manager.GetTests).Methods("GET")
 	m.HandleFunc("/tests", manager.CreateTest).Methods("POST")
 	m.HandleFunc("/tests/delete/{id}", manager.DeleteTest).Methods("POST")
 
 	i := api.PathPrefix("/intern").Subrouter()
-	i.HandleFunc("/tests", intern.InternAttemptHandler).Methods("GET")
+	i.Use(middleware.InternMiddleware)
+	i.HandleFunc("/tests", intern.GetAttempts).Methods("GET")
+	i.HandleFunc("/tests/{link}", intern.StartAttempt).Methods("GET")
+	i.HandleFunc("/attempt/finish", intern.FinishAttempt).Methods("POST")
 
 	a := api.PathPrefix("/admin").Subrouter()
 	a.Use(middleware.AdminMiddleware)

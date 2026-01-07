@@ -30,7 +30,7 @@ type LoginResponse struct {
 // @Param user body LoginRequest true "User object"
 // @Success 200 {object} LoginResponse
 // @Router /login [post]
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
+func Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

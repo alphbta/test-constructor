@@ -32,7 +32,7 @@ type RegisterResponse struct {
 // @Param user body RegisterRequest true "User object"
 // @Success 201 {object} RegisterResponse
 // @Router /register [post]
-func RegistrationHandler(w http.ResponseWriter, r *http.Request) {
+func Registration(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

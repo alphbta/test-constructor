@@ -78,6 +78,96 @@ definitions:
       user_id:
         type: integer
     type: object
+  intern.FinishAttemptRequest:
+    properties:
+      userAnswers:
+        items:
+          $ref: '#/definitions/intern.UserAnswerInfo'
+        type: array
+    type: object
+  intern.FinishAttemptResponse:
+    properties:
+      max_test_points:
+        type: integer
+      passed:
+        type: boolean
+      result:
+        type: string
+      score:
+        type: integer
+    type: object
+  intern.PublicMatching:
+    properties:
+      left:
+        items:
+          type: string
+        type: array
+      right:
+        items:
+          type: string
+        type: array
+    type: object
+  intern.PublicOptions:
+    properties:
+      case_sensitive:
+        type: boolean
+      choice:
+        items:
+          type: string
+        type: array
+      matching:
+        $ref: '#/definitions/intern.PublicMatching'
+      sequence:
+        items:
+          type: string
+        type: array
+    type: object
+  intern.QuestionInfo:
+    properties:
+      options:
+        $ref: '#/definitions/intern.PublicOptions'
+      order_number:
+        type: integer
+      text:
+        type: string
+      type:
+        $ref: '#/definitions/models.QType'
+    type: object
+  intern.StartAttemptResponse:
+    properties:
+      description:
+        type: string
+      questions:
+        items:
+          $ref: '#/definitions/intern.QuestionInfo'
+        type: array
+      title:
+        type: string
+    type: object
+  intern.UserAnswer:
+    properties:
+      choices:
+        items:
+          type: boolean
+        type: array
+      matching:
+        items:
+          $ref: '#/definitions/models.MatchingPair'
+        type: array
+      sequence:
+        items:
+          $ref: '#/definitions/models.SequenceItem'
+        type: array
+      user_input:
+        type: string
+    type: object
+  intern.UserAnswerInfo:
+    properties:
+      answer:
+        $ref: '#/definitions/intern.UserAnswer'
+      question_id:
+        type: integer
+    type: object
   manager.CreateQuestionInfo:
     properties:
       options:
@@ -158,6 +248,20 @@ definitions:
       right:
         type: string
     type: object
+  models.QType:
+    enum:
+    - single_choice
+    - multiple_choice
+    - text_input
+    - matching
+    - correct_order
+    type: string
+    x-enum-varnames:
+    - SingleChoice
+    - MultipleChoice
+    - TextInput
+    - Matching
+    - CorrectOrder
   models.QuestionOptions:
     properties:
       case_sensitive:
@@ -217,6 +321,53 @@ paths:
       summary: Создать организатора
       tags:
       - admin
+  /api/intern/attempt/finish:
+    post:
+      consumes:
+      - application/json
+      description: Получение ответов стажёра
+      parameters:
+      - description: Answers object
+        in: body
+        name: answers
+        required: true
+        schema:
+          $ref: '#/definitions/intern.FinishAttemptRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/intern.FinishAttemptResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Завершить тест
+      tags:
+      - intern
+  /api/intern/tests/{link}:
+    get:
+      consumes:
+      - application/json
+      description: Создание попытки
+      parameters:
+      - description: Ссылка теста
+        in: path
+        name: link
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/intern.StartAttemptResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Пройти тест
+      tags:
+      - intern
   /api/manager/tests:
     get:
       description: Получить список тестов

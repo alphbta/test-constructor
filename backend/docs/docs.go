@@ -54,6 +54,82 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/intern/attempt/finish": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Получение ответов стажёра",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "intern"
+                ],
+                "summary": "Завершить тест",
+                "parameters": [
+                    {
+                        "description": "Answers object",
+                        "name": "answers",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/intern.FinishAttemptRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/intern.FinishAttemptResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/intern/tests/{link}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Создание попытки",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "intern"
+                ],
+                "summary": "Пройти тест",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Ссылка теста",
+                        "name": "link",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/intern.StartAttemptResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/manager/tests": {
             "get": {
                 "security": [
@@ -350,6 +426,145 @@ const docTemplate = `{
                 }
             }
         },
+        "intern.FinishAttemptRequest": {
+            "type": "object",
+            "properties": {
+                "userAnswers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/intern.UserAnswerInfo"
+                    }
+                }
+            }
+        },
+        "intern.FinishAttemptResponse": {
+            "type": "object",
+            "properties": {
+                "max_test_points": {
+                    "type": "integer"
+                },
+                "passed": {
+                    "type": "boolean"
+                },
+                "result": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "integer"
+                }
+            }
+        },
+        "intern.PublicMatching": {
+            "type": "object",
+            "properties": {
+                "left": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "right": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "intern.PublicOptions": {
+            "type": "object",
+            "properties": {
+                "case_sensitive": {
+                    "type": "boolean"
+                },
+                "choice": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "matching": {
+                    "$ref": "#/definitions/intern.PublicMatching"
+                },
+                "sequence": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "intern.QuestionInfo": {
+            "type": "object",
+            "properties": {
+                "options": {
+                    "$ref": "#/definitions/intern.PublicOptions"
+                },
+                "order_number": {
+                    "type": "integer"
+                },
+                "text": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/models.QType"
+                }
+            }
+        },
+        "intern.StartAttemptResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "questions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/intern.QuestionInfo"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "intern.UserAnswer": {
+            "type": "object",
+            "properties": {
+                "choices": {
+                    "type": "array",
+                    "items": {
+                        "type": "boolean"
+                    }
+                },
+                "matching": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.MatchingPair"
+                    }
+                },
+                "sequence": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.SequenceItem"
+                    }
+                },
+                "user_input": {
+                    "type": "string"
+                }
+            }
+        },
+        "intern.UserAnswerInfo": {
+            "type": "object",
+            "properties": {
+                "answer": {
+                    "$ref": "#/definitions/intern.UserAnswer"
+                },
+                "question_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "manager.CreateQuestionInfo": {
             "type": "object",
             "properties": {
@@ -472,6 +687,23 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "models.QType": {
+            "type": "string",
+            "enum": [
+                "single_choice",
+                "multiple_choice",
+                "text_input",
+                "matching",
+                "correct_order"
+            ],
+            "x-enum-varnames": [
+                "SingleChoice",
+                "MultipleChoice",
+                "TextInput",
+                "Matching",
+                "CorrectOrder"
+            ]
         },
         "models.QuestionOptions": {
             "type": "object",

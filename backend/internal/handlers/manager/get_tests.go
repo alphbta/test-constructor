@@ -36,7 +36,7 @@ type TestsInfoResponse struct {
 // @Success 200 {object} TestsInfoResponse
 // @Failure 404 {object} map[string]string
 // @Router /api/manager/tests [get]
-func ManagerTestHandler(w http.ResponseWriter, r *http.Request) {
+func GetTests(w http.ResponseWriter, r *http.Request) {
 	var tests []models.Test
 	if err := database.DB.Preload("User").Find(&tests).Error; err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
