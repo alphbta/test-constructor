@@ -2,7 +2,6 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import DeleteIcon from "../../assets/delete.svg?react";
 import DeleteIconSub from "../../assets/delete_sub.svg?react";
-import CopyIcon from "../../assets/copy.svg?react";
 
 function ManualInputQuestion({ question, updateQuestion, deleteQuestion }) {
     const {
@@ -47,11 +46,7 @@ function ManualInputQuestion({ question, updateQuestion, deleteQuestion }) {
                         </div>
                     </span>
 
-                    <div className="q-icons q-icons-copy">
-                            <span onClick={() => CopyQuestion(question.id)}>
-                                <CopyIcon style={{ width: '24px', height: '24px' }} />
-                            </span>
-                    </div>
+
                     <div className="q-icons">
                             <span onClick={() => deleteQuestion(question.id)}>
                                 <DeleteIcon style={{ width: '24px', height: '24px' }}/>
@@ -69,11 +64,11 @@ function ManualInputQuestion({ question, updateQuestion, deleteQuestion }) {
                     </span>
                 </div>
             </div>
-            <div className="block-questions">
+            <div className="block-questions99">
             <div className="section-title">Правильные ответы</div>
                 <div className="answers-list">
                     {question.correctAnswers?.map((answer, index) => (
-                        <div key={index} className="answer-row">
+                        <div key={index} className="answer-row99">
                             <input
                                 type="text"
                                 className="answer-input"

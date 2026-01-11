@@ -2,7 +2,6 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import DeleteIcon from "../../assets/delete.svg?react";
 import DeleteIconSub from "../../assets/delete_sub.svg?react";
-import CopyIcon from "../../assets/copy.svg?react";
 
 function MatchingQuestion({ question, updateQuestion, deleteQuestion }) {
     const {
@@ -47,11 +46,7 @@ function MatchingQuestion({ question, updateQuestion, deleteQuestion }) {
                         </div>
                     </span>
 
-                    <div className="q-icons q-icons-copy">
-                            <span onClick={() => CopyQuestion(question.id)}>
-                                <CopyIcon style={{ width: '24px', height: '24px' }} />
-                            </span>
-                    </div>
+
                     <div className="q-icons">
                             <span onClick={() => deleteQuestion(question.id)}>
                                 <DeleteIcon style={{ width: '24px', height: '24px' }}/>
@@ -70,18 +65,17 @@ function MatchingQuestion({ question, updateQuestion, deleteQuestion }) {
                 </span>
             </div>
             </div>
-            <div className="matching-table">
-                <div className="table-header">
-                    <div className="header-cell">Вариант</div>
-                    <div className="header-cell">Ответ</div>
-                    <div className="header-cell"></div>
+            <div className="block-questions99">
+                <div className="block-questions-container">
+                    <div className="section-title999">Вариант</div>
+                    <div className="section-title3">Ответ</div>
                 </div>
-
+                <div className="answers-list">
                 {question.rows?.map((row, index) => (
-                    <div key={index} className="table-row">
+                    <div key={index} className="answer-row">
                         <input
                             type="text"
-                            className="table-input"
+                            className="answer-input"
                             placeholder="Введите вариант..."
                             value={row.option}
                             onChange={(e) => updateRow(index, "option", e.target.value)}
@@ -89,7 +83,7 @@ function MatchingQuestion({ question, updateQuestion, deleteQuestion }) {
                         <div className="table-separator">:::</div>
                         <input
                             type="text"
-                            className="table-input"
+                            className="answer-input"
                             placeholder="Введите ответ..."
                             value={row.answer}
                             onChange={(e) => updateRow(index, "answer", e.target.value)}
@@ -102,6 +96,7 @@ function MatchingQuestion({ question, updateQuestion, deleteQuestion }) {
                         </button>
                     </div>
                 ))}
+                </div>
             </div>
 
             <button className="add-answer-btn" onClick={addRow}>

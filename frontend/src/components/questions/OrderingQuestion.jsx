@@ -2,7 +2,6 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import DeleteIcon from "../../assets/delete.svg?react";
 import DeleteIconSub from "../../assets/delete_sub.svg?react";
-import CopyIcon from "../../assets/copy.svg?react";
 
 function OrderingQuestion({ question, updateQuestion, deleteQuestion }) {
     const {
@@ -47,11 +46,7 @@ function OrderingQuestion({ question, updateQuestion, deleteQuestion }) {
                         </div>
                     </span>
 
-                    <div className="q-icons q-icons-copy">
-                            <span onClick={() => CopyQuestion(question.id)}>
-                                <CopyIcon style={{ width: '24px', height: '24px' }} />
-                            </span>
-                    </div>
+
                     <div className="q-icons">
                             <span onClick={() => deleteQuestion(question.id)}>
                                 <DeleteIcon style={{ width: '24px', height: '24px' }}/>
@@ -70,11 +65,15 @@ function OrderingQuestion({ question, updateQuestion, deleteQuestion }) {
 
             </div>
             </div>
-            <div className="block-questions">
-            <div className="ordering-list">
+            <div className="block-questions99">
+                <div className="block-questions-container33">
+                    <div className="section-title222">№</div>
+                    <div className="section-title2222">Ответ</div>
+                </div>
+                <div className="answers-list">
                 {question.items?.map((item, index) => (
-                    <div key={index} className="ordering-item">
-                        <span className="item-number">{index + 1}.</span>
+                    <div key={index} className="answer-row">
+                        <span className="item-number">{index + 1}</span>
                         <input
                             type="text"
                             className="answer-input"

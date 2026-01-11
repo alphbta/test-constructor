@@ -2,7 +2,6 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import DeleteIcon from "../../assets/delete.svg?react";
 import DeleteIconSub from "../../assets/delete_sub.svg?react";
-import CopyIcon from "../../assets/copy.svg?react";
 
 function MultipleChoiceQuestion({ question, updateQuestion, deleteQuestion }) {
     const {
@@ -47,11 +46,6 @@ function MultipleChoiceQuestion({ question, updateQuestion, deleteQuestion }) {
                         </div>
                     </span>
 
-                    <div className="q-icons q-icons-copy">
-                            <span onClick={() => CopyQuestion(question.id)}>
-                                <CopyIcon style={{ width: '24px', height: '24px' }} />
-                            </span>
-                    </div>
                     <div className="q-icons">
                             <span onClick={() => deleteQuestion(question.id)}>
                                 <DeleteIcon style={{ width: '24px', height: '24px' }}/>
