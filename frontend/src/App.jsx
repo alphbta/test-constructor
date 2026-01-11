@@ -6,6 +6,10 @@ import Login from "./pages/Login.jsx";
 import Tests from "./pages/Test.jsx";
 import CreateTest from "./pages/CreateTest.jsx";
 
+import MyTestStudent from "./pages/MyTestStudent.jsx";
+import StatisticsTest from "./pages/StatisticsTest.jsx";
+import PassingTestStudent from "./pages/PassingTestStudent.jsx";
+
 function App() {
     return (
         <BrowserRouter>
@@ -14,6 +18,14 @@ function App() {
 
                 <Route path="/registration" element={<Registration />} />
                 <Route path="/login" element={<Login />} />
+
+                <Route path="/myTestStudent" element={<MyTestStudent />} />
+                <Route path="/statisticsTest" element={<StatisticsTest />} />
+                <Route path="/passingTestStudent" element={<PassingTestStudent />} />
+
+
+                <Route path="/statistics/:testId" element={<StatisticsTest />} />
+                <Route path="/test/:test_link" element={<PassingTestStudent />} />
 
                 <Route element={<ProtectedRoutes />}>
                     <Route path="/home" element={<Home />} />

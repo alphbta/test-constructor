@@ -8,6 +8,17 @@ const LogoutButton = () => {
     const buttonRef = useRef(null);
     const navigate = useNavigate();
 
+    let email = "";
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+        try {
+            const parsedUser = JSON.parse(storedUser);
+            email = parsedUser?.email || "";
+        } catch (e) {
+            console.error("Ошибка парсинга user из localStorage", e);
+        }
+    }
+
     const updateModalPosition = () => {
         if (buttonRef.current) {
             const buttonRect = buttonRef.current.getBoundingClientRect();
@@ -76,7 +87,9 @@ const LogoutButton = () => {
                             </div>
 
                             <div className="email-info">
-                                <p className="user-email">dimasharov007@gmail.com</p>
+                                <p className="user-email">
+                                    {email || "—"}
+                                </p>
                             </div>
 
                             <div className="logout-actions">

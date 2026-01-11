@@ -29,7 +29,16 @@ function Login() {
 
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(userData));
-            nav('/tests');
+
+            if (role === "manager") {
+                nav('/tests');
+            } else if (role === "intern") {
+                nav('/myTestStudent');
+            }else if (role === "admin") {
+                nav('/')
+            }
+
+
         } catch (error) {
             setError(error.response.data);
             return;

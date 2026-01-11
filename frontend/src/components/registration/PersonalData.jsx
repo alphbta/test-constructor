@@ -1,12 +1,16 @@
-import processMark from "../../assets/process-mark.svg";
-
-const PersonalData = () => {
+const PersonalData = ({ checked, onChange }) => {
     return (
         <div className="process-personal-data">
-            <img src={processMark} width="25" height="25"/>
+            <div className="setting-row">
+            <input
+                type="checkbox"
+                checked={checked}
+                onChange={onChange}
+            />
+            </div>
             <p>Я согласен(а) на обработку персональных данных</p>
         </div>
     );
-}
+};
 
-export default PersonalData
+export default PersonalData;

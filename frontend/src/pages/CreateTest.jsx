@@ -20,8 +20,6 @@ import ResultMessages from "../components/questions/ResultMessages";
 import "../styles/createTest.css";
 import LogoutButton from "../components/LogoutButton.jsx";
 
-
-
 function useAppSensors() {
     const pointerSensor = useSensor(PointerSensor);
     const keyboardSensor = useSensor(KeyboardSensor, {
@@ -36,58 +34,147 @@ export default function CreateTest() {
     const location = useLocation();
 
     const isEditing = location.state?.editing || false;
-    const editingTest = location.state?.test || null;
 
-    const [title, setTitle] = useState(isEditing ? editingTest.title : "");
-    const [description, setDescription] = useState(isEditing ? editingTest.description : "");
+    const storedEditingTest = (() => {
+        try {
+            const raw = localStorage.getItem("editingTest");
+            return raw ? JSON.parse(raw) : null;
+        } catch {
+            return null;
+        }
+    })();
+
+    const editingTest =
+        (location.state?.test && location.state.test.questions
+            ? location.state.test
+            : storedEditingTest) || null;
+
+    const deleteOnSave = location.state?.deleteOnSave || false;
+
+
+    const [title, setTitle] = useState(
+        isEditing ? editingTest?.title || "" : ""
+    );
+
+    const [description, setDescription] = useState(
+        isEditing ? editingTest?.description || "" : ""
+    );
+
+
+    const [time, setTime] = useState(
+        isEditing && editingTest?.complete_time
+            ? {
+                hours: Math.floor(editingTest.complete_time / 3600),
+                minutes: Math.floor(
+                    (editingTest.complete_time % 3600) / 60
+                ),
+                seconds: editingTest.complete_time % 60,
+            }
+            : {
+                hours: 0,
+                minutes: 0,
+                seconds: 0,
+            }
+    );
 
     const [passingCriteria, setPassingCriteria] = useState(
-        isEditing ? editingTest.passingCriteria || {
-            type: "percentage",
-            percentage: 75,
-            points: 0,
-        } : {
-            type: "percentage",
-            percentage: 75,
-            points: 0,
-        }
+        isEditing
+            ? {
+                type: editingTest?.is_percentage ? "percentage" : "points",
+                percentage: editingTest?.is_percentage
+                    ? editingTest.threshold
+                    : 75,
+                points: editingTest?.is_percentage
+                    ? 0
+                    : editingTest.threshold,
+            }
+            : {
+                type: "percentage",
+                percentage: 75,
+                points: 0,
+            }
     );
 
     const [resultMessages, setResultMessages] = useState(
-        isEditing ? editingTest.resultMessages || {
-            success: "",
-            failure: ""
-        } : {
-            success: "",
-            failure: ""
-        }
+        isEditing
+            ? {
+                success: editingTest?.success_text || "",
+                failure: editingTest?.fail_text || "",
+            }
+            : {
+                success: "",
+                failure: "",
+            }
     );
 
-    const [questions, setQuestions] = useState(
-        isEditing ? editingTest.questions.map((q, idx) => ({
-            id: `q-${idx}-${Date.now()}`,
-            order: idx + 1,
-            type: q.type,
-            text: q.text,
-            ...(q.type === "shortText" && {
-                correctAnswers: q.correctAnswers || [""],
-                caseSensitive: q.caseSensitive || false
-            }),
-            ...(q.type === "singleChoice" && {
-                options: q.options || [{ text: "", isCorrect: false }]
-            }),
-            ...(q.type === "multipleChoice" && {
-                options: q.options || [{ text: "", isCorrect: false }],
-                scoringType: q.scoringType || "allOrNothing"
-            }),
-            ...(q.type === "matching" && {
-                rows: q.rows || [{ option: "", answer: "" }]
-            }),
-            ...(q.type === "ordering" && {
-                items: q.items || [{ text: "" }]
-            }),
-            maxScore: q.maxScore || 15,
-        })) : [
+    const [questions, setQuestions] = useState(() => {
+        if (isEditing && editingTest && Array.isArray(editingTest.questions)) {
+            return editingTest.questions.map((q, idx) => {
+                const base = {
+                    id: `q-${idx}-${Date.now()}`,
+                    order: idx + 1,
+                    type: q.type || "shortText",
+                    text: q.text || "",
+                    maxScore: q.maxScore || q.points || 15,
+                };
+
+                switch (base.type) {
+                    case "shortText":
+                        return {
+                            ...base,
+                            correctAnswers:
+                                q.correctAnswers ||
+                                q.correct_input ||
+                                [""],
+                            caseSensitive:
+                                q.caseSensitive !== undefined
+                                    ? q.caseSensitive
+                                    : q.case_sensitive || false,
+                        };
+                    case "singleChoice":
+                        return {
+                            ...base,
+                            options:
+                                q.options ||
+                                q.choice ||
+                                [{ text: "", isCorrect: false }],
+                        };
+                    case "multipleChoice":
+                        return {
+                            ...base,
+                            options:
+                                q.options ||
+                                q.choice ||
+                                [{ text: "", isCorrect: false }],
+                            scoringType: q.scoringType || "allOrNothing",
+                        };
+                    case "matching":
+                        return {
+                            ...base,
+                            rows:
+                                q.rows ||
+                                q.matching ||
+                                [{ option: "", answer: "" }],
+                        };
+                    case "ordering":
+                        return {
+                            ...base,
+                            items:
+                                q.items ||
+                                q.sequence ||
+                                [{ text: "" }],
+                        };
+                    default:
+                        return {
+                            ...base,
+                            correctAnswers: [""],
+                            caseSensitive: false,
+                        };
+                }
+            });
+        }
+
+        return [
             {
                 id: "1",
                 order: 1,
@@ -97,11 +184,15 @@ export default function CreateTest() {
                 caseSensitive: false,
                 maxScore: 15,
             },
-        ]
-    );
+        ];
+    });
 
     const calculateTotalPoints = () => {
         return questions.reduce((sum, q) => sum + (q.maxScore || 0), 0);
+    };
+
+    const calculateCompleteTime = () => {
+        return time.hours * 3600 + time.minutes * 60 + time.seconds;
     };
 
     const sensors = useAppSensors();
@@ -155,8 +246,12 @@ export default function CreateTest() {
 
         if (over && active.id !== over.id) {
             setQuestions((items) => {
-                const oldIndex = items.findIndex((item) => item.id === active.id);
-                const newIndex = items.findIndex((item) => item.id === over.id);
+                const oldIndex = items.findIndex(
+                    (item) => item.id === active.id
+                );
+                const newIndex = items.findIndex(
+                    (item) => item.id === over.id
+                );
                 const newItems = arrayMove(items, oldIndex, newIndex);
 
                 return newItems.map((item, idx) => ({
@@ -167,156 +262,380 @@ export default function CreateTest() {
         }
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!title.trim()) {
             alert("Введите название теста!");
             return;
         }
 
         const testData = {
-            id: isEditing ? editingTest.id : Date.now().toString(),
             title: title.trim(),
             description: description.trim(),
-            createdAt: isEditing ? editingTest.createdAt : new Date().toISOString(),
-            passingCriteria: {
-                ...passingCriteria,
-                totalPoints: calculateTotalPoints()
-            },
-            resultMessages,
-            questions: questions.map((q) => ({
-                type: q.type,
-                text: q.text,
-                maxScore: q.maxScore,
-                ...(q.type === "shortText" && {
-                    correctAnswers: q.correctAnswers,
-                    caseSensitive: q.caseSensitive
-                }),
-                ...(q.type === "singleChoice" && {
-                    options: q.options
-                }),
-                ...(q.type === "multipleChoice" && {
-                    options: q.options,
-                    scoringType: q.scoringType
-                }),
-                ...(q.type === "matching" && {
-                    rows: q.rows
-                }),
-                ...(q.type === "ordering" && {
-                    items: q.items
-                }),
-            })),
+            is_percentage: passingCriteria.type === "percentage",
+            fail_text: resultMessages.failure || "",
+            success_text: resultMessages.success || "",
+            complete_time: calculateCompleteTime() || 3600,
+            threshold:
+                passingCriteria.type === "percentage"
+                    ? passingCriteria.percentage
+                    : passingCriteria.points,
+            questions: questions.map((q, index) => {
+                let options = {};
+                let questionType;
+
+                switch (q.type) {
+                    case "singleChoice":
+                        questionType = "single_choice";
+                        options = {
+                            choice:
+                                q.options?.map((opt) => ({
+                                    text: opt.text,
+                                    is_true: opt.isCorrect,
+                                })) || [],
+                        };
+                        break;
+                    case "multipleChoice":
+                        questionType = "multiple_choice";
+                        options = {
+                            choice:
+                                q.options?.map((opt) => ({
+                                    text: opt.text,
+                                    is_true: opt.isCorrect,
+                                })) || [],
+                        };
+                        break;
+                    case "shortText":
+                        questionType = "text_input";
+                        options = {
+                            correct_input: q.correctAnswers || [],
+                            case_sensitive: q.caseSensitive || false,
+                        };
+                        break;
+                    case "matching":
+                        questionType = "matching";
+                        options = {
+                            matching:
+                                q.rows?.map((row) => ({
+                                    left: row.option,
+                                    right: row.answer,
+                                })) || [],
+                        };
+                        break;
+                    case "ordering":
+                        questionType = "correct_order";
+                        options = {
+                            sequence:
+                                q.items?.map((item, itemIdx) => ({
+                                    text: item.text,
+                                    order: itemIdx + 1,
+                                })) || [],
+                        };
+                        break;
+                    default:
+                        questionType = "text_input";
+                }
+
+                return {
+                    text: q.text || "",
+                    points: q.maxScore || 0,
+                    type: questionType,
+                    order_number: index + 1,
+                    options: options,
+                };
+            }),
         };
 
-        const existingTests = JSON.parse(localStorage.getItem("savedTests")) || [];
+        console.log(
+            "Отправляемые данные на бэкенд:",
+            JSON.stringify(testData, null, 2)
+        );
 
-        let updatedTests;
-        if (isEditing) {
-            updatedTests = existingTests.map(test =>
-                test.id === editingTest.id ? testData : test
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                alert("Требуется авторизация!");
+                navigate("/login");
+                return;
+            }
+
+            if (isEditing && deleteOnSave && editingTest?.id) {
+                const testId =
+                    editingTest.ID || editingTest.id || editingTest.Id;
+                if (testId) {
+                    console.log(
+                        `Удаляем старый тест с ID: ${testId} перед созданием нового`
+                    );
+
+                    const deleteResponse = await fetch(
+                        `http://localhost:8080/api/manager/tests/delete/${testId}`,
+                        {
+                            method: "POST",
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                                "Content-Type": "application/json",
+                            },
+                        }
+                    );
+
+                    const deleteResponseText =
+                        await deleteResponse.text();
+                    console.log(
+                        "Ответ при удалении старого теста:",
+                        deleteResponseText
+                    );
+
+                    if (!deleteResponse.ok) {
+                        console.error(
+                            "Не удалось удалить старый тест. Создаем новый тест поверх существующего."
+                        );
+                    } else {
+                        console.log("Старый тест успешно удален");
+                    }
+                }
+            }
+
+            const response = await fetch(
+                "http://localhost:8080/api/manager/tests",
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(testData),
+                }
             );
-        } else {
-            updatedTests = [...existingTests, testData];
+
+            const responseText = await response.text();
+
+            if (!response.ok) {
+                console.error("Ответ сервера (текст):", responseText);
+                console.error("Статус ошибки:", response.status);
+                throw new Error(`Ошибка HTTP: ${response.status}`);
+            }
+
+            let result;
+            try {
+                result = JSON.parse(responseText);
+            } catch (e) {
+                console.error(
+                    "Не удалось распарсить JSON ответ:",
+                    responseText
+                );
+                throw new Error("Сервер вернул некорректный JSON");
+            }
+
+            console.log("Успешный ответ от сервера:", result);
+
+
+            console.log("Успешный ответ от сервера:", result);
+
+            const savedId = result?.id || result?.test_id || editingTest?.id;
+            if (savedId) {
+                try {
+                    const extendedTest = {
+                        ...(editingTest || {}),
+                        id: savedId,
+                        title: testData.title,
+                        description: testData.description,
+                        is_percentage: testData.is_percentage,
+                        threshold: testData.threshold,
+                        success_text: testData.success_text,
+                        fail_text: testData.fail_text,
+                        complete_time: testData.complete_time,
+                        questions,
+                    };
+
+                    const raw = localStorage.getItem("savedTestsExtended");
+                    const list = raw ? JSON.parse(raw) : [];
+
+                    const filtered = Array.isArray(list)
+                        ? list.filter((t) => t.id !== savedId)
+                        : [];
+
+                    filtered.push(extendedTest);
+                    localStorage.setItem(
+                        "savedTestsExtended",
+                        JSON.stringify(filtered)
+                    );
+                } catch (e) {
+                    console.error("Не удалось сохранить локальный тест с вопросами", e);
+                }
+            }
+
+
+            localStorage.removeItem("editingTest");
+
+            alert(
+                isEditing
+                    ? "Тест успешно обновлен!"
+                    : "Тест успешно создан на сервере!"
+            );
+            navigate("/tests", { replace: true });
+
+        } catch (error) {
+            console.error("Ошибка при создании теста:", error);
+            alert(
+                `Не удалось ${
+                    isEditing ? "обновить" : "создать"
+                } тест на сервере: ${error.message}\n\nПроверьте консоль для деталей.`
+            );
         }
-
-        localStorage.setItem("savedTests", JSON.stringify(updatedTests));
-
-        alert(isEditing ? "Тест успешно обновлён!" : "Тест успешно сохранён!");
-
-        navigate("/tests");
     };
 
     const questionTypes = [
         { key: "shortText", label: "Задания на ручной ввод" },
         { key: "singleChoice", label: "Одиночный выбор" },
         { key: "multipleChoice", label: "Множественный выбор" },
-        { key: "matching", label: "На соотношение"},
-        { key: "ordering", label: "На расположение в правильном порядке"},
+        { key: "matching", label: "На соотношение" },
+        {
+            key: "ordering",
+            label: "На расположение в правильном порядке",
+        },
     ];
 
     return (
         <div className="tests-page">
-            <div className="test-page" style={{ position: 'absolute', left: '1430px', top: '0px' }}>
+            <div
+                className="test-page"
+                style={{ position: "absolute", left: "1430px", top: "0px" }}
+            >
                 <LogoutButton />
             </div>
-        <div className="create-wrapper">
-            <div className="create-left">
-                <input
-                    className="test-title"
-                    placeholder="Название"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                />
-                <input
-                    className="test-desc"
-                    placeholder="Описание теста"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                />
-                <div className="tests-line"></div>
+            <div className="create-wrapper">
+                <div className="create-left">
+                    <input
+                        className="test-title"
+                        placeholder="Название"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                    />
+                    <input
+                        className="test-desc"
+                        placeholder="Описание теста"
+                        value={description}
+                        onChange={(e) =>
+                            setDescription(e.target.value)
+                        }
+                    />
+                    <div className="tests-line"></div>
 
-                <PassingCriteria
-                    criteria={passingCriteria}
-                    updateCriteria={setPassingCriteria}
-                    totalPoints={calculateTotalPoints()}
-                />
+                    <PassingCriteria
+                        criteria={passingCriteria}
+                        updateCriteria={setPassingCriteria}
+                        totalPoints={calculateTotalPoints()}
+                    />
 
-                <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                >
-                    <SortableContext
-                        items={questions.map((q) => q.id)}
-                        strategy={verticalListSortingStrategy}
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
                     >
-                        {questions.map((question) => (
-                            <SortableQuestion
-                                key={question.id}
-                                question={question}
-                                updateQuestion={updateQuestion}
-                                deleteQuestion={deleteQuestion}
-                            />
-                        ))}
-                    </SortableContext>
-                </DndContext>
-
-
-                <ResultMessages
-                    messages={resultMessages}
-                    updateMessages={setResultMessages}
-                />
-
-            </div>
-
-            <div className="create-right">
-                <button className="save-btn" onClick={handleSave}>
-                    {isEditing ? "Сохранить" : "Сохранить"}
-                </button>
-
-                <h3>Поля теста</h3>
-
-                <div className="right-section">
-                    <p>Добавить новый вопрос ▼</p>
-                    {questionTypes.map((type) => (
-                        <button
-                            key={type.key}
-                            className="right-btn"
-                            onClick={() => addQuestion(type.key)}
+                        <SortableContext
+                            items={questions.map((q) => q.id)}
+                            strategy={verticalListSortingStrategy}
                         >
-                            {type.label}
-                        </button>
-                    ))}
+                            {questions.map((question) => (
+                                <SortableQuestion
+                                    key={question.id}
+                                    question={question}
+                                    updateQuestion={updateQuestion}
+                                    deleteQuestion={deleteQuestion}
+                                />
+                            ))}
+                        </SortableContext>
+                    </DndContext>
+
+                    <ResultMessages
+                        messages={resultMessages}
+                        updateMessages={setResultMessages}
+                    />
                 </div>
-                <div className="time-box">
-                    <p>Установить время</p>
-                    <div className="time-inputs-box">
-                        <input type="number" min="0" placeholder="0 ч"/>
-                        <input type="number" min="0" max="59" placeholder="0 м" />
-                        <input type="number" min="0" max="59" placeholder="0 с" />
+
+                <div className="create-right">
+                    <div className="create-right-inner">
+                        <button
+                            className="save-btn"
+                            onClick={handleSave}
+                        >
+                            {isEditing
+                                ? "Сохранить изменения"
+                                : "Создать тест"}
+                        </button>
+
+
+                        <div className="right-section">
+                            <p>Добавить новый вопрос</p>
+                            {questionTypes.map((type) => (
+                                <button
+                                    key={type.key}
+                                    className="right-btn"
+                                    onClick={() => addQuestion(type.key)}
+                                >
+                                    {type.label}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="time-box">
+                            <p>Установить время</p>
+                            <div className="time-inputs-box">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    placeholder="0 ч"
+                                    value={time.hours}
+                                    onChange={(e) =>
+                                        setTime({
+                                            ...time,
+                                            hours:
+                                                parseInt(
+                                                    e.target.value
+                                                ) || 0,
+                                        })
+                                    }
+
+                                    />
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="59"
+                                    placeholder="0 м"
+                                    value={time.minutes}
+                                    onChange={(e) =>
+                                        setTime({
+                                            ...time,
+                                            minutes: Math.min(
+                                                59,
+                                                parseInt(
+                                                    e.target.value
+                                                ) || 0
+                                            ),
+                                        })
+                                    }
+                                />
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="59"
+                                    placeholder="0 с"
+                                    value={time.seconds}
+                                    onChange={(e) =>
+                                        setTime({
+                                            ...time,
+                                            seconds: Math.min(
+                                                59,
+                                                parseInt(
+                                                    e.target.value
+                                                ) || 0
+                                            ),
+                                        })
+                                    }
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
         </div>
     );
 }

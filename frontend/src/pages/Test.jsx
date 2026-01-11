@@ -1,22 +1,80 @@
 import "../styles/tests.css";
+import "../styles/confirm-modal.css";
+import "../styles/tests-share-modal.css";
+
 import LogoutButton from "../components/LogoutButton.jsx";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import EditIcon from "../assets/edit.svg?react";
 import ShareIcon from "../assets/share.svg?react";
 import StatisticsIcon from "../assets/statistics.svg?react";
-import DeleteIcon from "../assets/close.svg?react";
-
-
+import CloseIcon from "../assets/close.svg?react";
+import DeleteIcon from "../assets/delete.svg?react";
+import CopyIcon from "../assets/copy_sub.svg?react";
 export default function Tests() {
+    const [statsTest, setStatsTest] = useState(null);
     const navigate = useNavigate();
+
+
     const [tests, setTests] = useState([]);
     const [openMenuId, setOpenMenuId] = useState(null);
     const menuRefs = useRef({});
+    const [shareModalOpen, setShareModalOpen] = useState(false);
+    const [shareLink, setShareLink] = useState("");
+    const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+    const [testToDelete, setTestToDelete] = useState(null);
 
     useEffect(() => {
-        const savedTests = JSON.parse(localStorage.getItem("savedTests")) || [];
-        setTests(savedTests);
+        const fetchTests = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                if (!token) {
+                    navigate("/login");
+                    return;
+                }
+
+                const response = await fetch("http://localhost:8080/api/manager/tests", {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Ошибка загрузки тестов");
+                }
+
+                const data = await response.json();
+                console.log("Полученные тесты:", data);
+
+
+                let testsArray = [];
+                if (Array.isArray(data)) {
+                    testsArray = data;
+                } else if (data.tests && Array.isArray(data.tests)) {
+                    testsArray = data.tests;
+                } else if (data.data && Array.isArray(data.data)) {
+                    testsArray = data.data;
+                } else {
+                    console.error("Неизвестная структура ответа:", data);
+                }
+
+
+                const normalizedTests = testsArray.map(test => ({
+                    ...test,
+                    id: test.test_id,
+
+                }));
+
+                setTests(normalizedTests);
+                console.log('ids:', normalizedTests.map(t => t.id));
+
+            } catch (error) {
+                console.error("Ошибка:", error);
+                alert("Не удалось загрузить тесты");
+            }
+        };
+
+        fetchTests();
     }, []);
 
     const toggleMenu = (id, e) => {
@@ -44,106 +102,297 @@ export default function Tests() {
     }, []);
 
     const editTest = (test) => {
-        navigate("/create", { state: { editing: true, test } });
+        console.log("Тест для редактирования:", test);
+
+        let testForEditing = test;
+
+        try {
+            const raw = localStorage.getItem("savedTestsExtended");
+            if (raw) {
+                const list = JSON.parse(raw);
+                if (Array.isArray(list)) {
+                    const fromLocal = list.find((t) => t.id === test.id);
+                    if (fromLocal) {
+                        testForEditing = fromLocal;
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Не удалось прочитать savedTestsExtended", e);
+        }
+
+        try {
+            localStorage.setItem("editingTest", JSON.stringify(testForEditing));
+        } catch (e) {
+            console.error("Не удалось сохранить editingTest", e);
+        }
+
+        navigate("/create", {
+            state: { editing: true, test: testForEditing, deleteOnSave: true },
+        });
         setOpenMenuId(null);
     };
 
-    const deleteTest = (id) => {
-        if (window.confirm("Удалить этот тест?")) {
-            const updatedTests = tests.filter(test => test.id !== id);
+
+
+
+    const deleteTest = async (id) => {
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                alert("Требуется авторизация");
+                navigate("/login");
+                return;
+            }
+
+            console.log("Удаление теста с ID:", id);
+
+            const response = await fetch(`http://localhost:8080/api/manager/tests/delete/${id}`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            });
+
+            const responseText = await response.text();
+            console.log("Ответ сервера при удалении:", responseText);
+
+            if (!response.ok) {
+                console.error("Статус ошибки:", response.status);
+                throw new Error(`Ошибка удаления: ${response.status}`);
+            }
+
+
+            const updatedTests = tests.filter(test => {
+                const testId = test.id;
+                return testId !== id;
+            });
+
             setTests(updatedTests);
-            localStorage.setItem("savedTests", JSON.stringify(updatedTests));
             setOpenMenuId(null);
+            setConfirmModalOpen(false);
+
+        } catch (error) {
+            console.error("Ошибка при удалении теста:", error);
+            alert("Не удалось удалить тест на сервере. Проверьте консоль для деталей.");
         }
     };
-    const shareTest = () => {}
-    const closeTest = (id) => {
-        const updatedTests = tests.map(test =>
-            test.id === id ? { ...test, isClosed: true } : test
-        );
-        setTests(updatedTests);
-        localStorage.setItem("savedTests", JSON.stringify(updatedTests));
+
+
+    const openDeleteConfirm = (test) => {
+        setTestToDelete(test);
+        setConfirmModalOpen(true);
         setOpenMenuId(null);
-        alert("Тест закрыт (деактивирован)");
     };
+
+
+    const closeDeleteConfirm = () => {
+        setConfirmModalOpen(false);
+        setTestToDelete(null);
+    };;
+
+    const shareTest = async (test) => {
+        try {
+            const key = `shared_test_${test.test_link}`;
+
+            let testForShare = test;
+
+            try {
+                const raw = localStorage.getItem("savedTestsExtended");
+                if (raw) {
+                    const list = JSON.parse(raw);
+                    if (Array.isArray(list)) {
+                        const fromLocal = list.find((t) => t.id === test.id);
+                        if (fromLocal && Array.isArray(fromLocal.questions)) {
+                            testForShare = fromLocal;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("Не удалось прочитать savedTestsExtended", e);
+            }
+
+            localStorage.setItem(key, JSON.stringify(testForShare));
+
+            const link = `http://localhost:5173/test/${test.test_link}`;
+            setShareLink(link);
+            setShareModalOpen(true);
+        } catch (error) {
+            console.error("Ошибка при подготовке ссылки:", error);
+            alert("Не удалось подготовить ссылку");
+        }
+        setOpenMenuId(null);
+    };
+
+
+
+
+
+    const closeTest = async (id) => {
+
+    };
+
+    const viewStatistics = (test) => {
+        navigate(`/statistics/${test.id}`);
+        setOpenMenuId(null);
+    };
+
+
 
     return (
         <div className="tests-page">
             <>
                 <LogoutButton />
             </>
-        <div className="tests-wrapper">
-            <div className="tests-left">
+            <div className="tests-wrapper">
+                <div className="tests-left">
                     <h2>Мои тесты</h2>
                     <div className="tests-line"></div>
 
-                {tests.length === 0 ? (
-                    <div className="no-tests">
-                        Пока нет тестов. Создайте первый тест →
-                    </div>
-                ) : (
-                    <div className="tests-grid">
-                        {tests.map((test) => (
-                            <div key={test.id} className="test-card"
-                                 style={{
-                                     zIndex: openMenuId === test.id ? 100 : 1
-                                 }}
-                            >
-                                <div
-                                    className="test-menu-container"
-                                    ref={el => menuRefs.current[test.id] = el}
-                                >
-                                    <button
-                                        className="dots-btn"
-                                        onClick={(e) => toggleMenu(test.id, e)}
+                    {tests.length === 0 ? (
+                        <div className="no-tests">
+                            Пока нет тестов. Создайте первый тест →
+                        </div>
+                    ) : (
+                        <div className="tests-grid">
+                            {tests.map((test) => {
+
+                                const testId = test.id;
+                                const testTitle = test.Title || test.title;
+                                const isActive = test.IsActive !== false;
+
+                                return (
+                                    <div key={testId} className="test-card"
+                                         style={{
+                                             zIndex: openMenuId === testId ? 100 : 1,
+                                             opacity: isActive ? 1 : 0.6
+                                         }}
                                     >
-                                        ⋮
-                                    </button>
+                                        <div
+                                            className="test-menu-container"
+                                            ref={el => menuRefs.current[testId] = el}
+                                        >
+                                            <button
+                                                className="dots-btn"
+                                                onClick={(e) => toggleMenu(testId, e)}
+                                            >
+                                                ⋮
+                                            </button>
 
-                                    {openMenuId === test.id && (
-                                        <div className="dropdown-menu">
-                                            <button className="menu-item" onClick={() => editTest(test)}>
-                                                <EditIcon className="menu-icon" />
-                                                <span>Редактировать</span>
-                                            </button>
-                                            <button className="menu-item share" onClick={() => shareTest(test.id)}>
-                                                <ShareIcon className="menu-icon" />
-                                                <span>Поделиться</span>
-                                            </button>
-                                            {/* тут поменять с клос на нормальынй */}
-                                            <button className="menu-item" onClick={() => closeTest(test.id)}>
-                                                <StatisticsIcon className="menu-icon" />
-                                                <span>Статистика</span>
-                                            </button>
-                                            <button className="menu-item" onClick={() => deleteTest(test.id)}>
-                                                <DeleteIcon className="menu-icon" />
-                                                <span>Закрыть тест</span>
-                                            </button>
-                                            {/*<div className="menu-divider"></div>*/}
-                                            {/*<button className="menu-item delete" onClick={() => deleteTest(test.id)}>*/}
-                                            {/*    <span className="menu-icon">🗑️</span>*/}
-                                            {/*    <span>Удалить</span>*/}
-                                            {/*</button>*/}
+                                            {openMenuId === testId && (
+                                                <div className="dropdown-menu">
+                                                    <button className="menu-item" onClick={() => editTest(test)}>
+                                                        <EditIcon className="menu-icon" />
+                                                        <span>Редактировать</span>
+                                                    </button>
+                                                    <button className="menu-item share" onClick={() => shareTest(test)}>
+                                                        <ShareIcon className="menu-icon" />
+                                                        <span>Поделиться</span>
+                                                    </button>
+                                                    <button className="menu-item" onClick={() => viewStatistics(test)}>
+                                                        <StatisticsIcon className="menu-icon" />
+                                                        <span>Статистика</span>
+                                                    </button>
+
+                                                    <button className="menu-item" onClick={() => openDeleteConfirm(test)}>
+                                                        <DeleteIcon className="menu-icon" />
+                                                        <span>Удалить тест</span>
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-                                </div>
-                                    <span className="test-titles">
-                                        {test.title.length > 15
-                                        ? `${test.title.substring(0, 15)}...`
-                                        : test.title
-                                    }</span>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+                                        <span className="test-titles">
+                                            {testTitle && testTitle.length > 15
+                                                ? `${testTitle.substring(0, 15)}...`
+                                                : testTitle || "Без названия"
+                                            }
+                                        </span>
+                                        {!isActive && (
+                                            <div className="test-status">ЗАКРЫТ</div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
 
-            <div className="tests-right">
-                <button className="create-test-btn" onClick={() => navigate("/create")}>
-                    Создать тест
-                </button>
+                <div className="tests-right">
+                    <button className="create-test-btn" onClick={() => navigate("/create")}>
+                        Создать тест
+                    </button>
+                </div>
             </div>
-        </div>
+            {shareModalOpen && (
+                <div className="share-modal-overlay" onClick={() => setShareModalOpen(false)}>
+                    <div
+                        className="share-modal"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 className="share-modal-title">Поделиться ссылкой</h3>
+
+                        <div className="share-modal-body">
+                            <input
+                                type="text"
+                                className="share-modal-input"
+                                value={shareLink}
+                                readOnly
+                            />
+                            <button
+                                className="share-modal-copy-btn"
+                                onClick={async () => {
+                                    try {
+                                        await navigator.clipboard.writeText(shareLink);
+                                    } catch (e) {
+                                        console.error("Ошибка копирования:", e);
+                                        alert("Не удалось скопировать ссылку");
+                                    }
+                                }}
+                            >
+                                <CopyIcon className="share-modal-copy-icon" />
+                            </button>
+
+                        </div>
+                    </div>
+                </div>
+            )}
+            {confirmModalOpen && testToDelete && (
+                <div className="confirm-modal-overlay" onClick={closeDeleteConfirm}>
+                    <div
+                        className="confirm-modal"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 className="confirm-modal-title">Удалить тест</h3>
+                        <p className="confirm-modal-message">
+                            Вы уверены, что хотите удалить тест
+                            <strong> "{testToDelete.Title || testToDelete.title || "Без названия"}"</strong>?
+                            <br />
+                        </p>
+                        <div className="confirm-modal-buttons">
+                            <button
+                                className="confirm-modal-btn confirm-modal-btn-cancel"
+                                onClick={closeDeleteConfirm}
+                            >
+                                Отмена
+                            </button>
+                            <button
+                                className="confirm-modal-btn confirm-modal-btn-delete"
+                                onClick={() => deleteTest(testToDelete.id)}
+                            >
+                                Удалить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {statsTest && (
+                <StatisticsTest
+                    testId={statsTest.id}
+                    onClose={() => setStatsTest(null)}
+                />
+            )}
+
         </div>
     );
 }
