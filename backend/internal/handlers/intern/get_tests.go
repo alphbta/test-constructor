@@ -40,11 +40,11 @@ func GetAttempts(w http.ResponseWriter, r *http.Request) {
 	var attemptsInfo []AttemptInfo
 	for _, attempt := range attempts {
 		var resultText string
-		if attempt.Passed {
-			resultText = attempt.Test.SuccessText
-		} else {
-			resultText = attempt.Test.FailText
-		}
+		//if attempt.Passed {
+		//	resultText = attempt.Test.SuccessText
+		//} else {
+		//	resultText = attempt.Test.FailText
+		//}
 
 		attemptInfo := AttemptInfo{
 			attempt.AttemptID,

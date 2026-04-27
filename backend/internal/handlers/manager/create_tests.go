@@ -12,14 +12,10 @@ import (
 )
 
 type CreateTestInfo struct {
-	Title        string               `json:"title"`
-	Description  string               `json:"description"`
-	IsPercentage bool                 `json:"is_percentage"`
-	FailText     string               `json:"fail_text"`
-	SuccessText  string               `json:"success_text"`
-	CompleteTime int                  `json:"complete_time"`
-	Threshold    int                  `json:"threshold"`
-	Questions    []CreateQuestionInfo `json:"questions"`
+	Title       string               `json:"title"`
+	Description string               `json:"description"`
+	IsExtra     bool                 `json:"is_extra"`
+	Questions   []CreateQuestionInfo `json:"questions"`
 }
 
 type CreateQuestionInfo struct {
@@ -58,11 +54,6 @@ func CreateTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.IsPercentage && (req.Threshold < 0 || req.Threshold > 100) {
-		http.Error(w, "Процент прохождения должен быть от 0 до 100", http.StatusBadRequest)
-		return
-	}
-
 	userID := claims.UserID
 	transaction := database.DB.Begin()
 	if transaction.Error != nil {
@@ -78,15 +69,10 @@ func CreateTest(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	test := models.Test{
-		Title:        req.Title,
-		Description:  req.Description,
-		IsPercentage: req.IsPercentage,
-		IsActive:     true,
-		FailText:     req.FailText,
-		SuccessText:  req.SuccessText,
-		CompleteTime: req.CompleteTime,
-		Threshold:    req.Threshold,
-		CreatorID:    userID,
+		Title:       req.Title,
+		Description: req.Description,
+		IsExtra:     req.IsExtra,
+		CreatorID:   userID,
 	}
 
 	if err := transaction.Create(&test).Error; err != nil {
@@ -133,9 +119,8 @@ func CreateTest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"id":        test.ID,
-		"test_link": test.TestLink,
-		"message":   "Тест создан успешно",
+		"id":      test.ID,
+		"message": "Тест создан успешно",
 	}
 
 	w.Header().Set("Content-Type", "application/json")
