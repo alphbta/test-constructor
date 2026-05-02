@@ -2,6 +2,7 @@ import "../styles/MyTestStudent.css";
 import LogoutButton from "../components/LogoutButton.jsx";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { testsAPI } from "../services/api.js";
 
 export default function MyTestStudent() {
     const navigate = useNavigate();
@@ -10,27 +11,36 @@ export default function MyTestStudent() {
     const menuRefs = useRef({});
 
     useEffect(() => {
-        const userRaw = localStorage.getItem("user");
-        let userEmail = null;
+        const fetchAttempts = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                if (!token) {
+                    navigate("/login");
+                    return;
+                }
 
-        try {
-            if (userRaw) {
-                const user = JSON.parse(userRaw);
-                userEmail = user.email || user.username || user.login || null;
+                const response = await testsAPI.getAttempts();
+                const data = response.data;
+                console.log("Полученные попытки тестов:", data);
+
+                let testsArray = [];
+                if (Array.isArray(data)) {
+                    testsArray = data;
+                } else if (data.tests && Array.isArray(data.tests)) {
+                    testsArray = data.tests;
+                } else if (data.data && Array.isArray(data.data)) {
+                    testsArray = data.data;
+                }
+
+                setTests(testsArray);
+            } catch (error) {
+                console.error("Ошибка при загрузке попыток:", error);
+                setTests([]);
             }
-        } catch (e) {
-            console.error("Не удалось распарсить user", e);
-        }
+        };
 
-        if (!userEmail) {
-            setTests([]);
-            return;
-        }
-
-        const key = `savedTests_${userEmail}`;
-        const savedTests = JSON.parse(localStorage.getItem(key)) || [];
-        setTests(savedTests);
-    }, []);
+        fetchAttempts();
+    }, [navigate]);
 
 
     const toggleMenu = (id, e) => {

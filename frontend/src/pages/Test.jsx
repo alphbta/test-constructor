@@ -11,6 +11,7 @@ import StatisticsIcon from "../assets/statistics.svg?react";
 import CloseIcon from "../assets/close.svg?react";
 import DeleteIcon from "../assets/delete.svg?react";
 import CopyIcon from "../assets/copy_sub.svg?react";
+import { testsAPI } from "../services/api.js";
 export default function Tests() {
     const [statsTest, setStatsTest] = useState(null);
     const navigate = useNavigate();
@@ -33,19 +34,9 @@ export default function Tests() {
                     return;
                 }
 
-                const response = await fetch("http://localhost:8080/api/manager/tests", {
-                    headers: {
-                        "Authorization": `Bearer ${token}`
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error("Ошибка загрузки тестов");
-                }
-
-                const data = await response.json();
+                const response = await testsAPI.getTests();
+                const data = response.data;
                 console.log("Полученные тесты:", data);
-
 
                 let testsArray = [];
                 if (Array.isArray(data)) {
@@ -58,11 +49,9 @@ export default function Tests() {
                     console.error("Неизвестная структура ответа:", data);
                 }
 
-
                 const normalizedTests = testsArray.map(test => ({
                     ...test,
-                    id: test.test_id,
-
+                    id: test.test_id || test.id,
                 }));
 
                 setTests(normalizedTests);
@@ -75,7 +64,7 @@ export default function Tests() {
         };
 
         fetchTests();
-    }, []);
+    }, [navigate]);
 
     const toggleMenu = (id, e) => {
         if (e) e.stopPropagation();
@@ -103,32 +92,8 @@ export default function Tests() {
 
     const editTest = (test) => {
         console.log("Тест для редактирования:", test);
-
-        let testForEditing = test;
-
-        try {
-            const raw = localStorage.getItem("savedTestsExtended");
-            if (raw) {
-                const list = JSON.parse(raw);
-                if (Array.isArray(list)) {
-                    const fromLocal = list.find((t) => t.id === test.id);
-                    if (fromLocal) {
-                        testForEditing = fromLocal;
-                    }
-                }
-            }
-        } catch (e) {
-            console.error("Не удалось прочитать savedTestsExtended", e);
-        }
-
-        try {
-            localStorage.setItem("editingTest", JSON.stringify(testForEditing));
-        } catch (e) {
-            console.error("Не удалось сохранить editingTest", e);
-        }
-
         navigate("/create", {
-            state: { editing: true, test: testForEditing, deleteOnSave: true },
+            state: { editing: true, test: test, deleteOnSave: true },
         });
         setOpenMenuId(null);
     };
@@ -146,23 +111,7 @@ export default function Tests() {
             }
 
             console.log("Удаление теста с ID:", id);
-
-            const response = await fetch(`http://localhost:8080/api/manager/tests/delete/${id}`, {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                }
-            });
-
-            const responseText = await response.text();
-            console.log("Ответ сервера при удалении:", responseText);
-
-            if (!response.ok) {
-                console.error("Статус ошибки:", response.status);
-                throw new Error(`Ошибка удаления: ${response.status}`);
-            }
-
+            await testsAPI.deleteTest(id);
 
             const updatedTests = tests.filter(test => {
                 const testId = test.id;
@@ -194,26 +143,6 @@ export default function Tests() {
 
     const shareTest = async (test) => {
         try {
-            const key = `shared_test_${test.test_link}`;
-
-            let testForShare = test;
-
-            try {
-                const raw = localStorage.getItem("savedTestsExtended");
-                if (raw) {
-                    const list = JSON.parse(raw);
-                    if (Array.isArray(list)) {
-                        const fromLocal = list.find((t) => t.id === test.id);
-                        if (fromLocal && Array.isArray(fromLocal.questions)) {
-                            testForShare = fromLocal;
-                        }
-                    }
-                }
-            } catch (e) {
-                console.error("Не удалось прочитать savedTestsExtended", e);
-            }
-
-            localStorage.setItem(key, JSON.stringify(testForShare));
 
             const link = `http://localhost:5173/test/${test.test_link}`;
             setShareLink(link);

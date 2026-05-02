@@ -19,6 +19,7 @@ import PassingCriteria from "../components/questions/PassingCriteria.jsx";
 import ResultMessages from "../components/questions/ResultMessages";
 import "../styles/createTest.css";
 import LogoutButton from "../components/LogoutButton.jsx";
+import { testsAPI } from "../services/api.js";
 
 function useAppSensors() {
     const pointerSensor = useSensor(PointerSensor);
@@ -35,21 +36,7 @@ export default function CreateTest() {
 
     const isEditing = location.state?.editing || false;
 
-    const storedEditingTest = (() => {
-        try {
-            const raw = localStorage.getItem("editingTest");
-            return raw ? JSON.parse(raw) : null;
-        } catch {
-            return null;
-        }
-    })();
-
-    const editingTest =
-        (location.state?.test && location.state.test.questions
-            ? location.state.test
-            : storedEditingTest) || null;
-
-    const deleteOnSave = location.state?.deleteOnSave || false;
+    const editingTest = location.state?.test || null;
 
 
     const [title, setTitle] = useState(
@@ -358,113 +345,14 @@ export default function CreateTest() {
                 return;
             }
 
-            if (isEditing && deleteOnSave && editingTest?.id) {
-                const testId =
-                    editingTest.ID || editingTest.id || editingTest.Id;
-                if (testId) {
-                    console.log(
-                        `Удаляем старый тест с ID: ${testId} перед созданием нового`
-                    );
+            console.log("Отправляемые данные на бэкенд:", JSON.stringify(testData, null, 2));
 
-                    const deleteResponse = await fetch(
-                        `http://localhost:8080/api/manager/tests/delete/${testId}`,
-                        {
-                            method: "POST",
-                            headers: {
-                                Authorization: `Bearer ${token}`,
-                                "Content-Type": "application/json",
-                            },
-                        }
-                    );
-
-                    const deleteResponseText =
-                        await deleteResponse.text();
-                    console.log(
-                        "Ответ при удалении старого теста:",
-                        deleteResponseText
-                    );
-
-                    if (!deleteResponse.ok) {
-                        console.error(
-                            "Не удалось удалить старый тест. Создаем новый тест поверх существующего."
-                        );
-                    } else {
-                        console.log("Старый тест успешно удален");
-                    }
-                }
-            }
-
-            const response = await fetch(
-                "http://localhost:8080/api/manager/tests",
-                {
-                    method: "POST",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(testData),
-                }
-            );
-
-            const responseText = await response.text();
-
-            if (!response.ok) {
-                console.error("Ответ сервера (текст):", responseText);
-                console.error("Статус ошибки:", response.status);
-                throw new Error(`Ошибка HTTP: ${response.status}`);
-            }
-
-            let result;
-            try {
-                result = JSON.parse(responseText);
-            } catch (e) {
-                console.error(
-                    "Не удалось распарсить JSON ответ:",
-                    responseText
-                );
-                throw new Error("Сервер вернул некорректный JSON");
-            }
+            const response = await testsAPI.createTest(testData);
+            const result = response.data;
 
             console.log("Успешный ответ от сервера:", result);
 
 
-            console.log("Успешный ответ от сервера:", result);
-
-            const savedId = result?.id || result?.test_id || editingTest?.id;
-            if (savedId) {
-                try {
-                    const extendedTest = {
-                        ...(editingTest || {}),
-                        id: savedId,
-                        title: testData.title,
-                        description: testData.description,
-                        is_percentage: testData.is_percentage,
-                        threshold: testData.threshold,
-                        success_text: testData.success_text,
-                        fail_text: testData.fail_text,
-                        complete_time: testData.complete_time,
-                        questions,
-                    };
-
-                    const raw = localStorage.getItem("savedTestsExtended");
-                    const list = raw ? JSON.parse(raw) : [];
-
-                    const filtered = Array.isArray(list)
-                        ? list.filter((t) => t.id !== savedId)
-                        : [];
-
-                    filtered.push(extendedTest);
-                    localStorage.setItem(
-                        "savedTestsExtended",
-                        JSON.stringify(filtered)
-                    );
-                } catch (e) {
-                    console.error("Не удалось сохранить локальный тест с вопросами", e);
-                }
-            }
-
-
-            localStorage.removeItem("editingTest");
 
             alert(
                 isEditing

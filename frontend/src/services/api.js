@@ -38,4 +38,26 @@ export const authAPI = {
         api.post('/login', { email, password }),
 }
 
+export const testsAPI = {
+    // Manager endpoints
+    createTest: (testData) =>
+        api.post('/api/manager/tests', testData),
+
+    getTests: () =>
+        api.get('/api/manager/tests'),
+
+    deleteTest: (testId) =>
+        api.post(`/api/manager/tests/delete/${testId}`),
+
+    // Intern endpoints
+    getAttempts: () =>
+        api.get('/api/intern/tests'),
+
+    startAttempt: (link) =>
+        api.get(`/api/intern/tests/${link}`),
+
+    finishAttempt: (attemptData) =>
+        api.post('/api/intern/attempt/finish', attemptData),
+}
+
 export default api;

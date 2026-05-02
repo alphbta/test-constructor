@@ -9,19 +9,62 @@ export default function StatisticsTest() {
     const navigate = useNavigate();
     const [attempts, setAttempts] = useState([]);
     const [selectedAttempt, setSelectedAttempt] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!testId) return;
-        try {
-            const key = `attempts_${testId}`;
-            const raw = localStorage.getItem(key);
-            const list = raw ? JSON.parse(raw) : [];
-            setAttempts(Array.isArray(list) ? list : []);
-        } catch (e) {
-            console.error("Не удалось загрузить попытки теста", e);
-            setAttempts([]);
-        }
-    }, [testId]);
+        const fetchAttempts = async () => {
+            if (!testId) {
+                setLoading(false);
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem("token");
+                if (!token) {
+                    navigate("/login");
+                    return;
+                }
+
+                // Попытка получить статистику через API
+                // Примечание: может потребоваться добавить эндпоинт на бэкенде
+                // GET /api/manager/tests/{testId}/attempts
+                const response = await fetch(
+                    `http://localhost:8080/api/manager/tests/${testId}/attempts`,
+                    {
+                        headers: {
+                            "Authorization": `Bearer ${token}`
+                        }
+                    }
+                );
+
+                if (response.ok) {
+                    const data = await response.json();
+                    let attemptsArray = [];
+                    
+                    if (Array.isArray(data)) {
+                        attemptsArray = data;
+                    } else if (data.attempts && Array.isArray(data.attempts)) {
+                        attemptsArray = data.attempts;
+                    } else if (data.data && Array.isArray(data.data)) {
+                        attemptsArray = data.data;
+                    }
+
+                    setAttempts(attemptsArray);
+                    console.log("Полученные попытки:", attemptsArray);
+                } else {
+                    console.warn("Не удалось загрузить статистику с сервера");
+                    setAttempts([]);
+                }
+            } catch (error) {
+                console.error("Ошибка загрузки статистики:", error);
+                setAttempts([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchAttempts();
+    }, [testId, navigate]);
 
     const handleBack = () => {
         navigate("/tests");

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import LogoutButton from "../components/LogoutButton.jsx";
 import "../styles/PassingTestStudent.css";
 import { useParams, useNavigate } from "react-router-dom";
+import { testsAPI } from "../services/api.js";
 
 import {
     DndContext,
@@ -118,25 +119,23 @@ export default function PassingTestStudent() {
     const [timeLeft, setTimeLeft] = useState(null);
 
     useEffect(() => {
-        const key = `shared_test_${test_link}`;
-        const saved = localStorage.getItem(key);
-        if (saved) {
+        const loadTest = async () => {
             try {
-                const parsed = JSON.parse(saved);
+                const token = localStorage.getItem("token");
+                const response = await testsAPI.startAttempt(test_link);
+                const parsed = response.data;
 
+                console.log("Полученный тест с сервера:", parsed);
 
                 const shuffledTest = {
                     ...parsed,
                     questions: (parsed.questions || []).map((q, idx) => {
                         const qId = q.id ?? idx;
 
-
                         if (q.type === "matching") {
                             const rows = q.rows || q.matching || [];
                             const initialIds = rows.map((_, i) => `a-${i}`);
                             const shuffledIds = shuffleArray(initialIds);
-
-
 
                             setAnswers(prev => ({
                                 ...prev,
@@ -145,7 +144,6 @@ export default function PassingTestStudent() {
 
                             return q;
                         }
-
 
                         if (q.type === "ordering") {
                             const items = q.items || [];
@@ -166,14 +164,20 @@ export default function PassingTestStudent() {
 
                 setTest(shuffledTest);
                 setStartTime(Date.now());
-                if (parsed && typeof parsed.completetime === "number") {
-                    setTimeLeft(parsed.completetime);
+                if (parsed && typeof parsed.complete_time === "number") {
+                    setTimeLeft(parsed.complete_time);
                 }
             } catch (e) {
-                console.error("Ошибка парсинга теста", e);
+                console.error("Ошибка загрузки теста", e);
+                alert("Не удалось загрузить тест. Проверьте ссылку.");
+            } finally {
+                setLoading(false);
             }
+        };
+
+        if (test_link) {
+            loadTest();
         }
-        setLoading(false);
     }, [test_link]);
 
 
@@ -420,7 +424,7 @@ export default function PassingTestStudent() {
         });
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!test) return;
 
         const { totalScore, totalMax, perQuestion } =
@@ -442,88 +446,32 @@ export default function PassingTestStudent() {
             ? test.success_text || "Тест успешно пройден."
             : test.fail_text || "Тест не пройден.";
 
-
-        const userRaw = localStorage.getItem("user");
-        let userEmail = null;
-        let userName = null;
-        try {
-            if (userRaw) {
-                const user = JSON.parse(userRaw);
-                userEmail =
-                    user.email || user.username || user.login || null;
-
-                const lastName = user.surname || "";
-                const firstName = user.name || "";
-                userName = `${lastName} ${firstName}`.trim() || "Участник";
-            }
-        } catch (e) {
-            console.error("Не удалось распарсить user", e);
-        }
-
-        const testId = test.id || test.test_id || test_link;
-        const finishedAt = new Date().toISOString();
         const durationMs = startTime ? Date.now() - startTime : 0;
         const durationMinutes = Math.round(durationMs / 60000);
 
         try {
-            const keyAttempts = `attempts_${testId}`;
-            const rawAttempts = localStorage.getItem(keyAttempts);
-            const attemptsList = rawAttempts
-                ? JSON.parse(rawAttempts)
-                : [];
-
-            const attempt = {
-                id: Date.now(),
-                testId,
-                userEmail: userEmail || "unknown",
-                userName,
-                finishedAt,
-                passed,
-                message,
+            // Подготавливаем данные попытки для отправки на сервер
+            const attemptData = {
+                test_link: test_link,
+                answers: answers, // Ответы пользователя
                 score: totalScore,
-                totalMax,
-                perQuestion,
-                durationMinutes,
+                total_score: totalMax,
+                duration_seconds: Math.round(durationMs / 1000),
+                passed: passed,
             };
 
-            const updatedAttempts = Array.isArray(attemptsList)
-                ? [...attemptsList, attempt]
-                : [attempt];
-            localStorage.setItem(
-                keyAttempts,
-                JSON.stringify(updatedAttempts)
-            );
-        } catch (e) {
-            console.error("Не удалось сохранить попытку теста", e);
+            console.log("Отправляем результаты попытки:", attemptData);
+            
+            // Отправляем результаты на сервер
+            await testsAPI.finishAttempt(attemptData);
+            
+            alert(message);
+            navigate("/myTestStudent");
+
+        } catch (error) {
+            console.error("Ошибка при завершении попытки:", error);
+            alert("Ошибка при отправке результатов теста. Попробуйте еще раз.");
         }
-
-
-        if (userEmail) {
-            try {
-                const keyUser = `savedTests_${userEmail}`;
-                const raw = localStorage.getItem(keyUser);
-                const list = raw ? JSON.parse(raw) : [];
-
-                const record = {
-                    id: testId,
-                    title: test.title || "Без названия",
-                    passed,
-                    message,
-                    score: totalScore,
-                    totalMax,
-                    finishedAt,
-                    durationMinutes,
-                };
-
-                const updated = Array.isArray(list) ? [...list, record] : [record];
-                localStorage.setItem(keyUser, JSON.stringify(updated));
-            } catch (e) {
-                console.error("Не удалось сохранить результат теста", e);
-            }
-        }
-
-        alert(message);
-        navigate("/myTestStudent");
     };
 
     const questions = test.questions || [];
