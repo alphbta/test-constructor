@@ -130,6 +130,40 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/manager/events": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Получить список мероприятий",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "manager"
+                ],
+                "summary": "Получить мероприятия",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/manager.Event"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/manager/tests": {
             "get": {
                 "security": [
@@ -503,6 +537,9 @@ const docTemplate = `{
                 "order_number": {
                     "type": "integer"
                 },
+                "question_id": {
+                    "type": "integer"
+                },
                 "text": {
                     "type": "string"
                 },
@@ -588,16 +625,10 @@ const docTemplate = `{
         "manager.CreateTestInfo": {
             "type": "object",
             "properties": {
-                "complete_time": {
-                    "type": "integer"
-                },
                 "description": {
                     "type": "string"
                 },
-                "fail_text": {
-                    "type": "string"
-                },
-                "is_percentage": {
+                "is_extra": {
                     "type": "boolean"
                 },
                 "questions": {
@@ -606,48 +637,24 @@ const docTemplate = `{
                         "$ref": "#/definitions/manager.CreateQuestionInfo"
                     }
                 },
-                "success_text": {
-                    "type": "string"
-                },
-                "threshold": {
-                    "type": "integer"
-                },
                 "title": {
                     "type": "string"
                 }
             }
         },
+        "manager.Event": {
+            "type": "object"
+        },
         "manager.TestInfo": {
             "type": "object",
             "properties": {
-                "complete_time": {
-                    "type": "integer"
-                },
                 "creator_id": {
                     "type": "integer"
                 },
                 "description": {
                     "type": "string"
                 },
-                "fail_text": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "is_percentage": {
-                    "type": "boolean"
-                },
-                "success_text": {
-                    "type": "string"
-                },
                 "test_id": {
-                    "type": "integer"
-                },
-                "test_link": {
-                    "type": "string"
-                },
-                "threshold": {
                     "type": "integer"
                 },
                 "title": {
