@@ -19,7 +19,9 @@ import PassingCriteria from "../components/questions/PassingCriteria.jsx";
 import ResultMessages from "../components/questions/ResultMessages";
 import "../styles/createTest.css";
 import LogoutButton from "../components/LogoutButton.jsx";
-import { testsAPI } from "../services/api.js";
+import TimeBox from "../components/details/TimeBox.jsx";
+import BackIcon from "../assets/back.svg?react";
+
 
 function useAppSensors() {
     const pointerSensor = useSensor(PointerSensor);
@@ -36,7 +38,21 @@ export default function CreateTest() {
 
     const isEditing = location.state?.editing || false;
 
-    const editingTest = location.state?.test || null;
+    const storedEditingTest = (() => {
+        try {
+            const raw = localStorage.getItem("editingTest");
+            return raw ? JSON.parse(raw) : null;
+        } catch {
+            return null;
+        }
+    })();
+
+    const editingTest =
+        (location.state?.test && location.state.test.questions
+            ? location.state.test
+            : storedEditingTest) || null;
+
+    const deleteOnSave = location.state?.deleteOnSave || false;
 
 
     const [title, setTitle] = useState(
@@ -345,14 +361,113 @@ export default function CreateTest() {
                 return;
             }
 
-            console.log("Отправляемые данные на бэкенд:", JSON.stringify(testData, null, 2));
+            if (isEditing && deleteOnSave && editingTest?.id) {
+                const testId =
+                    editingTest.ID || editingTest.id || editingTest.Id;
+                if (testId) {
+                    console.log(
+                        `Удаляем старый тест с ID: ${testId} перед созданием нового`
+                    );
 
-            const response = await testsAPI.createTest(testData);
-            const result = response.data;
+                    const deleteResponse = await fetch(
+                        `http://localhost:8080/api/manager/tests/delete/${testId}`,
+                        {
+                            method: "POST",
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                                "Content-Type": "application/json",
+                            },
+                        }
+                    );
+
+                    const deleteResponseText =
+                        await deleteResponse.text();
+                    console.log(
+                        "Ответ при удалении старого теста:",
+                        deleteResponseText
+                    );
+
+                    if (!deleteResponse.ok) {
+                        console.error(
+                            "Не удалось удалить старый тест. Создаем новый тест поверх существующего."
+                        );
+                    } else {
+                        console.log("Старый тест успешно удален");
+                    }
+                }
+            }
+
+            const response = await fetch(
+                "http://localhost:8080/api/manager/tests",
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(testData),
+                }
+            );
+
+            const responseText = await response.text();
+
+            if (!response.ok) {
+                console.error("Ответ сервера (текст):", responseText);
+                console.error("Статус ошибки:", response.status);
+                throw new Error(`Ошибка HTTP: ${response.status}`);
+            }
+
+            let result;
+            try {
+                result = JSON.parse(responseText);
+            } catch (e) {
+                console.error(
+                    "Не удалось распарсить JSON ответ:",
+                    responseText
+                );
+                throw new Error("Сервер вернул некорректный JSON");
+            }
 
             console.log("Успешный ответ от сервера:", result);
 
 
+            console.log("Успешный ответ от сервера:", result);
+
+            const savedId = result?.id || result?.test_id || editingTest?.id;
+            if (savedId) {
+                try {
+                    const extendedTest = {
+                        ...(editingTest || {}),
+                        id: savedId,
+                        title: testData.title,
+                        description: testData.description,
+                        is_percentage: testData.is_percentage,
+                        threshold: testData.threshold,
+                        success_text: testData.success_text,
+                        fail_text: testData.fail_text,
+                        complete_time: testData.complete_time,
+                        questions,
+                    };
+
+                    const raw = localStorage.getItem("savedTestsExtended");
+                    const list = raw ? JSON.parse(raw) : [];
+
+                    const filtered = Array.isArray(list)
+                        ? list.filter((t) => t.id !== savedId)
+                        : [];
+
+                    filtered.push(extendedTest);
+                    localStorage.setItem(
+                        "savedTestsExtended",
+                        JSON.stringify(filtered)
+                    );
+                } catch (e) {
+                    console.error("Не удалось сохранить локальный тест с вопросами", e);
+                }
+            }
+
+
+            localStorage.removeItem("editingTest");
 
             alert(
                 isEditing
@@ -369,6 +484,10 @@ export default function CreateTest() {
                 } тест на сервере: ${error.message}\n\nПроверьте консоль для деталей.`
             );
         }
+    };
+
+    const handleBack = () => {
+        navigate("/tests");
     };
 
     const questionTypes = [
@@ -390,8 +509,17 @@ export default function CreateTest() {
             >
                 <LogoutButton />
             </div>
+
             <div className="create-wrapper">
                 <div className="create-left">
+                    <div className="stat-top-bar2">
+                        <button className="stat-back-btn2" onClick={handleBack}>
+                            <BackIcon />
+                        </button>
+                        <h1>Создание теста</h1>
+
+                    </div>
+                    <div className="tests-line"></div>
                     <input
                         className="test-title"
                         placeholder="Название"
@@ -399,21 +527,21 @@ export default function CreateTest() {
                         onChange={(e) => setTitle(e.target.value)}
                     />
                     <input
-                        className="test-desc"
+                        className="test-desk"
                         placeholder="Описание теста"
                         value={description}
                         onChange={(e) =>
                             setDescription(e.target.value)
                         }
                     />
-                    <div className="tests-line"></div>
 
+                    {/*
                     <PassingCriteria
                         criteria={passingCriteria}
                         updateCriteria={setPassingCriteria}
                         totalPoints={calculateTotalPoints()}
                     />
-
+                       */}
                     <DndContext
                         sensors={sensors}
                         collisionDetection={closestCenter}
@@ -434,10 +562,11 @@ export default function CreateTest() {
                         </SortableContext>
                     </DndContext>
 
-                    <ResultMessages
+                    {/* <ResultMessages
                         messages={resultMessages}
                         updateMessages={setResultMessages}
                     />
+                    */}
                 </div>
 
                 <div className="create-right">
@@ -464,63 +593,8 @@ export default function CreateTest() {
                                 </button>
                             ))}
                         </div>
-                        <div className="time-box">
-                            <p>Установить время</p>
-                            <div className="time-inputs-box">
-                                <input
-                                    type="number"
-                                    min="0"
-                                    placeholder="0 ч"
-                                    value={time.hours}
-                                    onChange={(e) =>
-                                        setTime({
-                                            ...time,
-                                            hours:
-                                                parseInt(
-                                                    e.target.value
-                                                ) || 0,
-                                        })
-                                    }
-
-                                    />
-                                <input
-                                    type="number"
-                                    min="0"
-                                    max="59"
-                                    placeholder="0 м"
-                                    value={time.minutes}
-                                    onChange={(e) =>
-                                        setTime({
-                                            ...time,
-                                            minutes: Math.min(
-                                                59,
-                                                parseInt(
-                                                    e.target.value
-                                                ) || 0
-                                            ),
-                                        })
-                                    }
-                                />
-                                <input
-                                    type="number"
-                                    min="0"
-                                    max="59"
-                                    placeholder="0 с"
-                                    value={time.seconds}
-                                    onChange={(e) =>
-                                        setTime({
-                                            ...time,
-                                            seconds: Math.min(
-                                                59,
-                                                parseInt(
-                                                    e.target.value
-                                                ) || 0
-                                            ),
-                                        })
-                                    }
-                                />
-                            </div>
-                        </div>
+                        {/* <TimeBox time={time} setTime={setTime} />
+                        */}
                     </div>
                 </div>
             </div>

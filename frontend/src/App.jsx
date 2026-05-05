@@ -10,6 +10,10 @@ import MyTestStudent from "./pages/MyTestStudent.jsx";
 import StatisticsTest from "./pages/StatisticsTest.jsx";
 import PassingTestStudent from "./pages/PassingTestStudent.jsx";
 
+import Events from "./pages/Events.jsx";
+import Candidates from "./pages/Candidates.jsx";
+
+
 function App() {
     return (
         <BrowserRouter>
@@ -32,6 +36,11 @@ function App() {
                     <Route path="/tests" element={<Tests />} />
                     <Route path="/create" element={<CreateTest />} />
                 </Route>
+
+                <Route path="/tests" element={<Tests />} />
+                <Route path="/events" element={<Events />} />
+                <Route path="/candidates" element={<Candidates />} />
+
             </Routes>
         </BrowserRouter>
     )

@@ -1,0 +1,56 @@
+import "../styles/tests.css";
+import LogoutButton from "../components/LogoutButton.jsx";
+import { useNavigate } from "react-router-dom";
+
+import TaskIcon from "../assets/task.svg?react";
+import EventIcon from "../assets/event.svg?react";
+import CandidatesIcon from "../assets/Candidates.svg?react";
+export default function Events() {
+    const navigate = useNavigate();
+
+    const handleBack = () => {
+        navigate("/tests");
+    };
+
+    return (
+        <div className="tests-page">
+            <div
+                className="test-page"
+                style={{ position: "absolute", left: "1430px", top: "0px" }}
+            >
+                <LogoutButton />
+            </div>
+            <div className="tests-wrapper">
+                <div className="tests-left">
+                    {/* Навигационные вкладки */}
+                    <div className="tests-tabs">
+                        <button
+                            className="tab-btn"
+                            onClick={() => navigate("/tests")}
+                        >
+                            <TaskIcon />
+                            Тестовые задания
+                        </button>
+                        <button
+                            className="tab-btn tab-btn-active"
+                            onClick={() => navigate("/events")}
+                        >
+                            <EventIcon />
+                            Мероприятия
+                        </button>
+                        <button
+                            className="tab-btn"
+                            onClick={() => navigate("/candidates")}
+                        >
+                            <CandidatesIcon />
+                            Кандидаты
+                        </button>
+                    </div>
+                    {/* <div className="tests-line"></div> */}
+
+                </div>
+
+            </div>
+        </div>
+    );
+}

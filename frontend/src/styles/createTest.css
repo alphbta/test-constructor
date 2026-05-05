@@ -21,34 +21,32 @@
 .test-title {
     font-family: 'Futura Md BT', sans-serif;
     width: 95%;
-    padding: 1px 20px;
+    padding: 10px 20px;
     border-radius: 30px;
-    background: transparent;
-    color: #F0E8D5;
+    margin-top: 0px;
+    margin-bottom: 30px;
+    background: #F0E8D5;
+    color: #2F4156 !important;
     font-size: 24px;
-    font-weight: bold;
+}
+.test-desk {
+    font-family: 'Futura Md BT', sans-serif;
+    width: 95%;
+    padding: 10px 20px;
+    border-radius: 30px;
+    margin-top: -20px;
+    margin-bottom: 30px;
+    background: #F0E8D5;
+    color: #2F4156 !important;
+    font-size: 24px;
 }
 
-.test-desc {
-    width: 95%;
-    padding: 1px 20px;
-    border-radius: 30px;
-    margin-bottom: 30px;
-    background: transparent;
-    color: #F0E8D5;
-    font-size: 16px;
-}
 
 .tests-line {
     height: 1px;
     background: #F4EDD9;
     margin-top: 0;
-    margin-bottom: 30px;
-}
-
-.test-title::placeholder,
-.test-desc::placeholder {
-    color: #F0E8D5;
+    margin-bottom: 3px;
 }
 
 .question-block {
@@ -602,7 +600,7 @@
 
 .score-container {
     background: #2F4156;
-    padding: 8px 10px;
+    padding: 8px 50px;
     border-radius: 10px;
     color: #F0E8D5;
     font-size: 16px;
@@ -618,13 +616,13 @@
 
 .score-input {
     width: 40px;
-    padding: 1px 1px;
+    padding: 0px 0px;
     border-radius: 10px;
     background: #2F4156;
     color: #F0E8D5;
     font-size: 18px;
-    margin-top: 0px;
-    margin-left: 5px;
+    margin-top: 0;
+    margin-left: 0;
     text-align: center;
     font-weight: bold;
 
@@ -1075,4 +1073,18 @@ input[type="checkbox"] {
 
 .message-textarea::placeholder {
     color: #2F4156;
+}
+.stat-back-btn2{
+    background: #F0E8D5;
+    border-radius: 10px;
+    padding: 5px 5px 1px 5px;
+
+}
+.stat-top-bar2{
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.stat-top-bar2 h1{
+    padding-top: 20px;
 }

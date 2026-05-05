@@ -25,9 +25,6 @@ export default function StatisticsTest() {
                     return;
                 }
 
-                // Попытка получить статистику через API
-                // Примечание: может потребоваться добавить эндпоинт на бэкенде
-                // GET /api/manager/tests/{testId}/attempts
                 const response = await fetch(
                     `http://localhost:8080/api/manager/tests/${testId}/attempts`,
                     {

@@ -12,6 +12,10 @@ import CloseIcon from "../assets/close.svg?react";
 import DeleteIcon from "../assets/delete.svg?react";
 import CopyIcon from "../assets/copy_sub.svg?react";
 import { testsAPI } from "../services/api.js";
+import BackIcon from "../assets/back.svg?react";
+import TaskIcon from "../assets/task.svg?react";
+import EventIcon from "../assets/event.svg?react";
+import CandidatesIcon from "../assets/Candidates.svg?react";
 export default function Tests() {
     const [statsTest, setStatsTest] = useState(null);
     const navigate = useNavigate();
@@ -176,8 +180,32 @@ export default function Tests() {
             </>
             <div className="tests-wrapper">
                 <div className="tests-left">
-                    <h2>Мои тесты</h2>
-                    <div className="tests-line"></div>
+                    {/* Навигационные вкладки */}
+                    <div className="tests-tabs">
+                        <button
+                            className="tab-btn tab-btn-active"
+                            onClick={() => navigate("/tests")}
+                        >
+                            <TaskIcon />
+                            Тестовые задания
+                        </button>
+                        <button
+                            className="tab-btn"
+                            onClick={() => navigate("/events")}
+                        >
+                            <EventIcon />
+                            Мероприятия
+                        </button>
+                        <button
+                            className="tab-btn"
+                            onClick={() => navigate("/candidates")}
+                        >
+                            <CandidatesIcon />
+                            Кандидаты
+                        </button>
+                    </div>
+                    {/* <div className="tests-line"></div> */}
+
 
                     {tests.length === 0 ? (
                         <div className="no-tests">

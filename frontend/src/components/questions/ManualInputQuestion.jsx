@@ -2,6 +2,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import DeleteIcon from "../../assets/delete.svg?react";
 import DeleteIconSub from "../../assets/delete_sub.svg?react";
+import ScoreInput from "../details/ScoreInput.jsx";
 
 function ManualInputQuestion({ question, updateQuestion, deleteQuestion }) {
     const {
@@ -97,16 +98,11 @@ function ManualInputQuestion({ question, updateQuestion, deleteQuestion }) {
                         </label>
                     </div>
             </div>
-            <div className="score-section">
-                Баллы за верный ответ :{" "}
-                <span className="score-container">
-                    <input type="number" className="score-input"
-                        value={question.maxScore || 0}
-                        onChange={(e) => updateQuestion(question.id, "maxScore", parseInt(e.target.value) || 0)}
-                    />{" "}
-                    б
-                </span>
-            </div>
+            <ScoreInput
+                value={question.maxScore}
+                onChange={val => updateQuestion(question.id, "maxScore", val)}
+            />
+
         </div>
     );
 }

@@ -274,3 +274,36 @@
     font-size: 16px;
     stroke: none;
 }
+
+/* Вкладки навигации вместо заголовка */
+.tests-tabs {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #F4EDD9;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: #F4EDD9;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 10px 20px;
+    border-radius: 15px;
+    font-family: 'Futura Md BT', sans-serif;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.tab-btn-active {
+    background: #F4EDD9;
+    color: #2F4156;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
