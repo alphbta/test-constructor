@@ -38,7 +38,7 @@ type CreateQuestionInfo struct {
 func CreateTest(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(middleware.UserContextKey).(*auth.JWTClaims)
 	if !ok {
-		http.Error(w, "Authentication failed", http.StatusUnauthorized)
+		http.Error(w, "Вы не авторизованы", http.StatusUnauthorized)
 		return
 	}
 
@@ -65,6 +65,7 @@ func CreateTest(w http.ResponseWriter, r *http.Request) {
 		if r := recover(); r != nil {
 			transaction.Rollback()
 			http.Error(w, "Ошибка сервера", http.StatusInternalServerError)
+			return
 		}
 	}()
 
