@@ -140,32 +140,32 @@ func FinishAttempt(w http.ResponseWriter, r *http.Request) {
 	now := time.Now()
 	attempt.EndTime = &now
 	attempt.Score = float64(userPoints)
-	var passed bool
-	if attempt.Test.IsPercentage {
-		percentage := (float64(userPoints) / float64(maxPoints)) * 100
-		passed = percentage >= float64(attempt.Test.Threshold)
-	} else {
-		passed = userPoints >= attempt.Test.Threshold
-	}
+	//var passed bool
+	//if attempt.Test.IsPercentage {
+	//	percentage := (float64(userPoints) / float64(maxPoints)) * 100
+	//	passed = percentage >= float64(attempt.Test.Threshold)
+	//} else {
+	//	passed = userPoints >= attempt.Test.Threshold
+	//}
 
-	attempt.Passed = passed
-	if err := database.DB.Save(&attempt).Error; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	//attempt.Passed = passed
+	//if err := database.DB.Save(&attempt).Error; err != nil {
+	//	http.Error(w, err.Error(), http.StatusInternalServerError)
+	//	return
+	//}
 
-	resultText := attempt.Test.FailText
-	if passed {
-		resultText = attempt.Test.SuccessText
-	}
+	//resultText := attempt.Test.FailText
+	//if passed {
+	//	resultText = attempt.Test.SuccessText
+	//}
 
-	response := FinishAttemptResponse{
-		Result:        resultText,
-		Score:         userPoints,
-		MaxTestPoints: maxPoints,
-		Passed:        passed,
-	}
+	//response := FinishAttemptResponse{
+	//	Result:        resultText,
+	//	Score:         userPoints,
+	//	MaxTestPoints: maxPoints,
+	//	Passed:        passed,
+	//}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	//w.Header().Set("Content-Type", "application/json")
+	//json.NewEncoder(w).Encode(response)
 }

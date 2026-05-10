@@ -10,6 +10,7 @@ type Answer struct {
 	QuestionID   uint           `gorm:"not null"`
 	InternAnswer datatypes.JSON `gorm:"not null"`
 	IsCorrect    bool           `gorm:"not null"`
+	Points       float64        `gorm:"not null"`
 	// Связи
 	Question Question
 	Attempt  Attempt

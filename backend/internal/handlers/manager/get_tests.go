@@ -6,22 +6,14 @@ import (
 	"test-constructor/internal/database"
 	"test-constructor/internal/models"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
 type TestInfo struct {
-	ID           uint      `json:"test_id"`
-	TestLink     uuid.UUID `json:"test_link"`
-	CreatorID    uint      `json:"creator_id"`
-	Title        string    `json:"title"`
-	Description  string    `json:"description"`
-	IsPercentage bool      `json:"is_percentage"`
-	IsActive     bool      `json:"is_active"`
-	FailText     string    `json:"fail_text"`
-	SuccessText  string    `json:"success_text"`
-	CompleteTime int       `json:"complete_time"`
-	Threshold    int       `json:"threshold"`
+	ID          uint   `json:"test_id"`
+	CreatorID   uint   `json:"creator_id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
 }
 
 type TestsInfoResponse struct {
@@ -46,17 +38,10 @@ func GetTests(w http.ResponseWriter, r *http.Request) {
 	var response TestsInfoResponse
 	for _, t := range tests {
 		response.Tests = append(response.Tests, TestInfo{
-			ID:           t.ID,
-			TestLink:     t.TestLink,
-			CreatorID:    t.CreatorID,
-			Title:        t.Title,
-			Description:  t.Description,
-			IsPercentage: t.IsPercentage,
-			IsActive:     t.IsActive,
-			FailText:     t.FailText,
-			SuccessText:  t.SuccessText,
-			CompleteTime: t.CompleteTime,
-			Threshold:    t.Threshold,
+			ID:          t.ID,
+			CreatorID:   t.CreatorID,
+			Title:       t.Title,
+			Description: t.Description,
 		})
 	}
 

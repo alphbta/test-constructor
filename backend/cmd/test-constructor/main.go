@@ -44,6 +44,7 @@ func main() {
 	m.HandleFunc("/tests", manager.GetTests).Methods("GET")
 	m.HandleFunc("/tests", manager.CreateTest).Methods("POST")
 	m.HandleFunc("/tests/delete/{id}", manager.DeleteTest).Methods("POST")
+	m.HandleFunc("/events", manager.GetEvents).Methods("GET")
 
 	i := api.PathPrefix("/intern").Subrouter()
 	i.Use(middleware.InternMiddleware)

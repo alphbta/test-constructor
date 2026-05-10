@@ -128,6 +128,8 @@ definitions:
         $ref: '#/definitions/intern.PublicOptions'
       order_number:
         type: integer
+      question_id:
+        type: integer
       text:
         type: string
       type:
@@ -183,46 +185,26 @@ definitions:
     type: object
   manager.CreateTestInfo:
     properties:
-      complete_time:
-        type: integer
       description:
         type: string
-      fail_text:
-        type: string
-      is_percentage:
+      is_extra:
         type: boolean
       questions:
         items:
           $ref: '#/definitions/manager.CreateQuestionInfo'
         type: array
-      success_text:
-        type: string
-      threshold:
-        type: integer
       title:
         type: string
     type: object
+  manager.Event:
+    type: object
   manager.TestInfo:
     properties:
-      complete_time:
-        type: integer
       creator_id:
         type: integer
       description:
         type: string
-      fail_text:
-        type: string
-      is_active:
-        type: boolean
-      is_percentage:
-        type: boolean
-      success_text:
-        type: string
       test_id:
-        type: integer
-      test_link:
-        type: string
-      threshold:
         type: integer
       title:
         type: string
@@ -368,6 +350,27 @@ paths:
       summary: Пройти тест
       tags:
       - intern
+  /api/manager/events:
+    get:
+      description: Получить список мероприятий
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manager.Event'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Получить мероприятия
+      tags:
+      - manager
   /api/manager/tests:
     get:
       description: Получить список тестов

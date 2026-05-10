@@ -30,6 +30,7 @@ func Connect() {
 		&models.Answer{},
 		&models.Role{},
 		&models.Attempt{},
+		&models.EventConfig{},
 	)
 	if err != nil {
 		log.Fatal("Ошибка миграции базы данных", err)
