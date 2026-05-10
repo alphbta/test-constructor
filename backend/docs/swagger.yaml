@@ -170,6 +170,27 @@ definitions:
       question_id:
         type: integer
     type: object
+  manager.CreateEventCfgInfo:
+    properties:
+      event_id:
+        type: integer
+      extra_threshold:
+        items:
+          $ref: '#/definitions/manager.ExtraThresholdInfo'
+        type: array
+      fail_text:
+        type: string
+      specialization_id:
+        type: integer
+      success_text:
+        type: string
+      test_id:
+        type: integer
+      threshold:
+        type: number
+      time_limit:
+        type: integer
+    type: object
   manager.CreateQuestionInfo:
     properties:
       options:
@@ -197,6 +218,22 @@ definitions:
         type: string
     type: object
   manager.Event:
+    properties:
+      end_date:
+        type: string
+      name:
+        type: string
+      start_date:
+        type: string
+    type: object
+  manager.ExtraThresholdInfo:
+    properties:
+      message:
+        type: string
+      test_id:
+        type: integer
+      threshold:
+        type: number
     type: object
   manager.TestInfo:
     properties:

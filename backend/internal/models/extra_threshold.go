@@ -6,5 +6,5 @@ type ExtraThreshold struct {
 	TestID           uint
 	Threshold        float64 `gorm:"not null"`
 	Message          string
-	Config           EventConfig `gorm:"foreignKey:ConfigID;constraint:OnDelete:CASCADE;"`
+	Test             Test `gorm:"foreignKey:TestID;constraint:OnDelete:CASCADE;"`
 }

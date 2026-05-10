@@ -602,6 +602,38 @@ const docTemplate = `{
                 }
             }
         },
+        "manager.CreateEventCfgInfo": {
+            "type": "object",
+            "properties": {
+                "event_id": {
+                    "type": "integer"
+                },
+                "extra_threshold": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/manager.ExtraThresholdInfo"
+                    }
+                },
+                "fail_text": {
+                    "type": "string"
+                },
+                "specialization_id": {
+                    "type": "integer"
+                },
+                "success_text": {
+                    "type": "string"
+                },
+                "test_id": {
+                    "type": "integer"
+                },
+                "threshold": {
+                    "type": "number"
+                },
+                "time_limit": {
+                    "type": "integer"
+                }
+            }
+        },
         "manager.CreateQuestionInfo": {
             "type": "object",
             "properties": {
@@ -643,7 +675,32 @@ const docTemplate = `{
             }
         },
         "manager.Event": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "end_date": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "manager.ExtraThresholdInfo": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "test_id": {
+                    "type": "integer"
+                },
+                "threshold": {
+                    "type": "number"
+                }
+            }
         },
         "manager.TestInfo": {
             "type": "object",

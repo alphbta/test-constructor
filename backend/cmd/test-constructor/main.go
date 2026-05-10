@@ -45,6 +45,7 @@ func main() {
 	m.HandleFunc("/tests", manager.CreateTest).Methods("POST")
 	m.HandleFunc("/tests/delete/{id}", manager.DeleteTest).Methods("POST")
 	m.HandleFunc("/events", manager.GetEvents).Methods("GET")
+	m.HandleFunc("/events", manager.CreateConfig).Methods("POST")
 
 	i := api.PathPrefix("/intern").Subrouter()
 	i.Use(middleware.InternMiddleware)
@@ -59,7 +60,7 @@ func main() {
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{clientURL},
+		AllowedOrigins:   []string{clientURL, "http://127.0.0.1:8080"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "OPTIONS", "DELETE"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
