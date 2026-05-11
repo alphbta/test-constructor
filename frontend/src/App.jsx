@@ -12,6 +12,7 @@ import PassingTestStudent from "./pages/PassingTestStudent.jsx";
 
 import Events from "./pages/Events.jsx";
 import Candidates from "./pages/Candidates.jsx";
+import EventConfigPage from "./components/EventConfigPage";
 
 
 function App() {
@@ -40,6 +41,9 @@ function App() {
                 <Route path="/tests" element={<Tests />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/candidates" element={<Candidates />} />
+
+                <Route path="/event-config" element={<EventConfigPage />} />
+
 
             </Routes>
         </BrowserRouter>

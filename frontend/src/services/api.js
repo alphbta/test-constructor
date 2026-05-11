@@ -29,6 +29,10 @@ api.interceptors.response.use(
         return Promise.reject(error);
     }
 );
+export const eventsAPI = {
+    getEvents: () =>
+        api.get('/api/manager/events'),
+}
 
 export const authAPI = {
     register: (name, surname, email, password) =>

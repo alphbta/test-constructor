@@ -280,18 +280,22 @@
     display: flex;
     gap: 20px;
     margin-bottom: 30px;
-    padding-bottom: 15px;
+    padding-bottom: 0;
     border-bottom: 2px solid #F4EDD9;
 }
 
 .tab-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
     background: none;
     border: none;
     color: #F4EDD9;
     font-size: 18px;
     cursor: pointer;
-    padding: 10px 20px;
-    border-radius: 15px;
+    padding: 10px 70px;
+    border-radius: 20px 20px 0 0;
     font-family: 'Futura Md BT', sans-serif;
     font-weight: bold;
     transition: all 0.3s ease;
@@ -303,7 +307,106 @@
 }
 
 .tab-btn-active {
-    background: #F4EDD9;
+    background: #C8D9E6;
     color: #2F4156;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.tests {
+    flex: 3;
+    background: #2F4156;
+    padding: 30px;
+    color: white;
+    border-right: 8px solid #F4EDD9;
+    border-radius: 30px;
+}
+
+.tests h2 {
+    margin-top: -20px;
+    margin-bottom: -10px;
+    font-size: 50px;
+
+    transform: translateX(34px);
+}
+
+/* События/Мероприятия */
+.events-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.event-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #F4EDD9;
+    padding: 2px;
+    border-radius: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.event-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    flex-direction: row;
+}
+
+.event-title {
+    margin: 10px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #2F4156;
+    font-family: 'Futura Md BT', sans-serif;
+    white-space: nowrap;
+    min-width: 200px;
+}
+
+.event-dates {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 14px;
+    color: #555;
+    white-space: nowrap;
+    margin-left: 400px;
+}
+
+
+.event-separator {
+    opacity: 0.5;
+}
+
+.event-actions {
+    display: flex;
+    gap: 0px;
+}
+
+.event-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    transition: all 0.3s ease;
+    margin-right: 30px;
+    margin-top: 3px;
+}
+
+.event-btn svg {
+    width: 40px;
+    height: 40px;
+}
+
+.settings-btn:hover {
+    transform: scale(1.1) rotate(15deg);
+}
+
+.statistics-btn:hover {
+    transform: scale(1.1);
+}
+
+.event-btn:active {
+    transform: scale(0.95);
 }

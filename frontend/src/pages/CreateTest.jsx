@@ -13,6 +13,8 @@ import {
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import EditIcon from "../assets/edit.svg?react";
+
 import { useNavigate, useLocation } from "react-router-dom";
 import SortableQuestion from "../components/Question";
 import PassingCriteria from "../components/questions/PassingCriteria.jsx";
@@ -62,6 +64,7 @@ export default function CreateTest() {
     const [description, setDescription] = useState(
         isEditing ? editingTest?.description || "" : ""
     );
+    const [showQuestionMenu, setShowQuestionMenu] = useState(false);
 
 
     const [time, setTime] = useState(
@@ -520,12 +523,16 @@ export default function CreateTest() {
 
                     </div>
                     <div className="tests-line"></div>
-                    <input
-                        className="test-title"
-                        placeholder="Название"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                    />
+                    <div className="title-input-container">
+                        <input
+                            className="test-title"
+                            placeholder="Название"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                        />
+                        <EditIcon />
+                    </div>
+                    <div className="title-input-container-desk">
                     <input
                         className="test-desk"
                         placeholder="Описание теста"
@@ -534,7 +541,8 @@ export default function CreateTest() {
                             setDescription(e.target.value)
                         }
                     />
-
+                        <EditIcon />
+                    </div>
                     {/*
                     <PassingCriteria
                         criteria={passingCriteria}
@@ -579,24 +587,33 @@ export default function CreateTest() {
                                 ? "Сохранить изменения"
                                 : "Создать тест"}
                         </button>
-
-
+                        <h3>Поля теста</h3>
                         <div className="right-section">
-                            <p>Добавить новый вопрос</p>
-                            {questionTypes.map((type) => (
+                            <button
+                                className="right-btn-toggle"
+                                onClick={() => setShowQuestionMenu(!showQuestionMenu)}
+                            >
+                                Добавить новый вопрос
+                                <span className={`toggle-arrow ${showQuestionMenu ? 'open' : ''}`}>▼</span>
+                            </button>
+
+                            {showQuestionMenu && questionTypes.map((type) => (
                                 <button
                                     key={type.key}
                                     className="right-btn"
-                                    onClick={() => addQuestion(type.key)}
+                                    onClick={() => {
+                                        addQuestion(type.key);
+                                    }}
                                 >
                                     {type.label}
                                 </button>
                             ))}
                         </div>
                         {/* <TimeBox time={time} setTime={setTime} />
-                        */}
+        */}
                     </div>
                 </div>
+
             </div>
         </div>
     );

@@ -10,14 +10,11 @@ export default function Candidates() {
 
     return (
         <div className="tests-page">
-            <div
-                className="test-page"
-                style={{ position: "absolute", left: "1430px", top: "0px" }}
-            >
+            <>
                 <LogoutButton />
-            </div>
+            </>
             <div className="tests-wrapper">
-                <div className="tests-left">
+                <div className="tests">
                     {/* Навигационные вкладки */}
                     <div className="tests-tabs">
                         <button
