@@ -25,13 +25,13 @@ func Connect() {
 
 	err = DB.AutoMigrate(
 		&models.User{},
-		&models.Role{},
 		&models.Test{},
 		&models.Question{},
 		&models.Answer{},
+		&models.Role{},
 		&models.Attempt{},
 		&models.EventConfig{},
-		&models.ExtraThreshold{},  // ← ДОБАВИТЬ ЭТУ СТРОКУ
+		&models.ExtraThreshold{},
 	)
 	if err != nil {
 		log.Fatal("Ошибка миграции базы данных", err)

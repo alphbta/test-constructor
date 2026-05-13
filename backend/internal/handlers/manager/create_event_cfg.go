@@ -26,6 +26,14 @@ type ExtraThresholdInfo struct {
 	TestID    uint    `json:"test_id"`
 }
 
+// @Summary Создать настройку мероприятия
+// @Security ApiKeyAuth
+// @Tags manager
+// @Accept json
+// @Produce json
+// @Param test body CreateEventCfgInfo true "EventCfg object"
+// @Success 201 {object} map[string]interface{}
+// @Router /api/manager/tests [post]
 func CreateConfig(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(middleware.UserContextKey).(*auth.JWTClaims)
 	if !ok {

@@ -14,6 +14,6 @@ type EventConfig struct {
 	TestLink         uuid.UUID `gorm:"type:uuid;default:gen_random_uuid()"`
 	Threshold        float64
 	ExtraThreshold   []ExtraThreshold `gorm:"foreignKey:ConfigID;constraint:OnDelete:CASCADE;OnUpdate:CASCADE"`
-	Test             Test `gorm:"foreignKey:TestID;constraint:OnDelete:CASCADE;OnUpdate:CASCADE"`
-	User             User `gorm:"foreignKey:CreatorID;constraint:OnDelete:CASCADE;OnUpdate:CASCADE"`
+	Test             Test             `gorm:"foreignKey:TestID;constraint:OnDelete:CASCADE;OnUpdate:CASCADE"`
+	User             User             `gorm:"foreignKey:CreatorID;constraint:OnDelete:CASCADE;OnUpdate:CASCADE"`
 }
