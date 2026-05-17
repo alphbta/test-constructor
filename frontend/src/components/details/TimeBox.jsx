@@ -1,9 +1,11 @@
 import React from 'react';
+import timeIcon from "../../assets/time.svg";
 
 export default function TimeBox({ time, setTime }) {
     return (
         <div className="time-box">
             <div className="time-box1">
+                <img src={timeIcon} alt="время" />
                 <p>Ограничение по времени</p>
             </div>
             <div className="time-box-inner1">
