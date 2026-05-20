@@ -4,7 +4,12 @@ import CriteriaTable from './details/CriteriaTable';
 import TimeBox from './details/TimeBox';
 import ShareLinkBox from './details/ShareLinkBox';
 import SpecializationSelect from './details/SpecializationSelect';
+import { testsAPI } from '../services/api.js';
 import '../styles/event-config.css';
+import back2 from '../assets/back2.svg';
+import { useNavigate } from 'react-router-dom';
+import plusIcon from '../assets/plus.svg';
+import korzinaIcon from '../assets/korzina.svg';
 
 // Моки для специализаций (замени на загрузку из API, если нужно)
 const allSpecsMock = [
@@ -30,16 +35,49 @@ export default function EventConfigPage() {
     const [time, setTime] = useState({ hours: 0, minutes: 0, seconds: 0 });
     const [shareLink, setShareLink] = useState('https://newforms-novaya-forma-konstruktion');
 
-    // Загрузка тестов из API при монтировании
+    // Загрузка тестов из API при монтировании, только тесты текущего организатора
     useEffect(() => {
-        // Пример через fetch:
-        fetch('/api/tests') // замени на свой путь к API
-            .then(res => res.json())
-            .then(data => setTests(data))
-            .catch(err => {
-                setTests([]); // если ошибка, пусть будет пусто
+        const fetchTests = async () => {
+            try {
+                const response = await testsAPI.getTests();
+                const data = response.data;
+
+                // Поддерживаем несколько форматов ответа (как в других страницах)
+                let testsArray = [];
+                if (Array.isArray(data)) {
+                    testsArray = data;
+                } else if (data.tests && Array.isArray(data.tests)) {
+                    testsArray = data.tests;
+                } else if (data.data && Array.isArray(data.data)) {
+                    testsArray = data.data;
+                } else {
+                    console.error('Неизвестная структура ответа testsAPI.getTests():', data);
+                }
+
+                const normalized = testsArray.map(test => ({
+                    ...test,
+                    id: test.test_id || test.id,
+                    creator_id: test.creator_id ?? test.creatorId ?? test.CreatorID ?? test.creatorID,
+                    title: test.title || test.name || test.description || `Тест ${test.test_id || test.id}`,
+                }));
+
+                // Получаем id текущего пользователя из localStorage (устанавливается при логине)
+                const userStr = localStorage.getItem('user');
+                const currentUserId = userStr ? (JSON.parse(userStr).id) : null;
+
+                // Фильтруем по creator_id, если есть currentUserId
+                const filtered = currentUserId != null
+                    ? normalized.filter(t => Number(t.creator_id) === Number(currentUserId))
+                    : normalized;
+
+                setTests(filtered);
+            } catch (err) {
                 console.error('Ошибка загрузки тестов:', err);
-            });
+                setTests([]);
+            }
+        };
+
+        fetchTests();
     }, []);
 
     // Модалка для выбора тестов
@@ -64,23 +102,53 @@ export default function EventConfigPage() {
     const handleAddCriteria = () => {
         setCriteria([...criteria, { threshold: 0, message: '', extraTests: [] }]);
     };
+    const navigate = useNavigate();
+
+    const handleRemoveSelected = (idToRemove) => {
+        setSelectedTests(prev => prev.filter(id => id !== idToRemove));
+    };
 
     return (
         <div className="event-config-page">
             {/* Левая панель */}
             <div className="event-config-sidebar">
-                <button className="add-tests-btn" onClick={() => openModal('main')}>Добавить тесты</button>
+                <div className="event-config-header">
+                    <button
+                        type="button"
+                        className="event-config-back-btn"
+                        onClick={() => navigate('/events')}
+                        aria-label="Вернуться к мероприятиям"
+                    >
+                        <img src={back2} alt="" className="event-config-back-icon" />
+                    </button>
+                    <p>Настройка тестов мероприятия</p>
+                </div>
+
+                <button className="add-tests-btn" onClick={() => openModal('main')}>
+                    <span>Добавить тесты</span>
+                    <img src={plusIcon} alt="Добавить" className="add-tests-plus" />
+                </button>
+
                 <ul className="event-config-tests-list">
                     {selectedTests.map(id => {
                         const test = tests.find(t => t.id === id);
                         return test ? (
                             <li key={id} className="event-config-test-item">
-                                {test.title}
+                                <span className="test-title">{test.title}</span>
+                                <button
+                                    className="test-delete-btn"
+                                    onClick={() => handleRemoveSelected(id)}
+                                    aria-label={`Удалить тест ${test.title}`}
+                                    type="button"
+                                >
+                                    <img src={korzinaIcon} alt="Удалить" />
+                                </button>
                             </li>
                         ) : null;
                     })}
                 </ul>
             </div>
+
             {/* Центральная панель */}
             <div className="event-config-main">
                 <SpecializationSelect
