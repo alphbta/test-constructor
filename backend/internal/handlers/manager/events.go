@@ -2,16 +2,16 @@ package manager
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
-	"os"
+	"test-constructor/config"
 )
 
 type Event struct {
-	Name      string `json:"name"`
-	StartDate string `json:"start_date"`
-	EndDate   string `json:"end_date"`
+	Name            string           `json:"name"`
+	StartDate       string           `json:"start_date"`
+	EndDate         string           `json:"end_date"`
+	Specializations []Specialization `json:"specializations"`
 }
 
 // @Summary Получить мероприятия
@@ -23,13 +23,16 @@ type Event struct {
 // @Failure 404 {object} map[string]string
 // @Router /api/manager/events [get]
 func GetEvents(w http.ResponseWriter, r *http.Request) {
-	req, err := http.NewRequest("GET", "http://127.0.0.1:8000/api/users/events/", nil)
+	cfg := config.Load()
+	crmService := cfg.CRMService
+	crmToken := cfg.CRMToken
+	req, err := http.NewRequest("GET", crmService+"/api/users/events/", nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	req.Header.Set("X-Machine-Key", os.Getenv("M2M_SECRET_KEY"))
+	req.Header.Set("X-Service-Token", crmToken)
 	req.Header.Set("Accept", "application/json")
 
 	client := &http.Client{}
@@ -58,7 +61,6 @@ func GetEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf(string(body))
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(events)
 }

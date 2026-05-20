@@ -128,6 +128,8 @@ definitions:
         $ref: '#/definitions/intern.PublicOptions'
       order_number:
         type: integer
+      points:
+        type: integer
       question_id:
         type: integer
       text:
@@ -135,14 +137,29 @@ definitions:
       type:
         $ref: '#/definitions/models.QType'
     type: object
+  intern.StartAttemptRequest:
+    properties:
+      application_id:
+        type: integer
+    type: object
   intern.StartAttemptResponse:
     properties:
+      application_id:
+        type: integer
+      config_id:
+        type: integer
       description:
         type: string
       questions:
         items:
           $ref: '#/definitions/intern.QuestionInfo'
         type: array
+      test_id:
+        type: integer
+      threshold:
+        type: number
+      time_limit:
+        type: integer
       title:
         type: string
     type: object
@@ -168,27 +185,6 @@ definitions:
       answer:
         $ref: '#/definitions/intern.UserAnswer'
       question_id:
-        type: integer
-    type: object
-  manager.CreateEventCfgInfo:
-    properties:
-      event_id:
-        type: integer
-      extra_threshold:
-        items:
-          $ref: '#/definitions/manager.ExtraThresholdInfo'
-        type: array
-      fail_text:
-        type: string
-      specialization_id:
-        type: integer
-      success_text:
-        type: string
-      test_id:
-        type: integer
-      threshold:
-        type: number
-      time_limit:
         type: integer
     type: object
   manager.CreateQuestionInfo:
@@ -226,6 +222,42 @@ definitions:
       start_date:
         type: string
     type: object
+  manager.EventCfgInfo:
+    properties:
+      event_id:
+        type: integer
+      extra_threshold:
+        items:
+          $ref: '#/definitions/manager.ExtraThresholdInfo'
+        type: array
+      fail_text:
+        type: string
+      specialization_id:
+        type: integer
+      success_text:
+        type: string
+      test_id:
+        type: integer
+      threshold:
+        type: number
+      time_limit:
+        type: integer
+    type: object
+  manager.EventSpecializationsResponse:
+    properties:
+      end_date:
+        type: string
+      event_id:
+        type: integer
+      event_name:
+        type: string
+      specializations:
+        items:
+          $ref: '#/definitions/manager.Specialization'
+        type: array
+      start_date:
+        type: string
+    type: object
   manager.ExtraThresholdInfo:
     properties:
       message:
@@ -234,6 +266,13 @@ definitions:
         type: integer
       threshold:
         type: number
+    type: object
+  manager.Specialization:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
     type: object
   manager.TestInfo:
     properties:
@@ -368,9 +407,15 @@ paths:
     get:
       consumes:
       - application/json
-      description: Создание попытки
+      description: Создание попытки по ссылке конфигурации мероприятия
       parameters:
-      - description: Ссылка теста
+      - description: Start attempt object
+        in: body
+        name: answers
+        required: true
+        schema:
+          $ref: '#/definitions/intern.StartAttemptRequest'
+      - description: Ссылка конфигурации теста
         in: path
         name: link
         required: true
@@ -384,7 +429,7 @@ paths:
             $ref: '#/definitions/intern.StartAttemptResponse'
       security:
       - ApiKeyAuth: []
-      summary: Пройти тест
+      summary: Пройти тест через конфигурацию мероприятия
       tags:
       - intern
   /api/manager/events:
@@ -406,6 +451,93 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Получить мероприятия
+      tags:
+      - manager
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: EventCfg object
+        in: body
+        name: test
+        required: true
+        schema:
+          $ref: '#/definitions/manager.EventCfgInfo'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Создать настройку мероприятия
+      tags:
+      - manager
+  /api/manager/events/{id}:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Config ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: EventCfg object
+        in: body
+        name: test
+        required: true
+        schema:
+          $ref: '#/definitions/manager.EventCfgInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Обновить настройку мероприятия
+      tags:
+      - manager
+  /api/manager/events/{id}/specializations:
+    get:
+      consumes:
+      - application/json
+      description: Получение списка специализаций конкретного мероприятия
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manager.EventSpecializationsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Получить специализации мероприятия
       tags:
       - manager
   /api/manager/tests:

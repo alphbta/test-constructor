@@ -100,7 +100,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Создание попытки",
+                "description": "Создание попытки по ссылке конфигурации мероприятия",
                 "consumes": [
                     "application/json"
                 ],
@@ -110,11 +110,20 @@ const docTemplate = `{
                 "tags": [
                     "intern"
                 ],
-                "summary": "Пройти тест",
+                "summary": "Пройти тест через конфигурацию мероприятия",
                 "parameters": [
                     {
+                        "description": "Start attempt object",
+                        "name": "answers",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/intern.StartAttemptRequest"
+                        }
+                    },
+                    {
                         "type": "string",
-                        "description": "Ссылка теста",
+                        "description": "Ссылка конфигурации теста",
                         "name": "link",
                         "in": "path",
                         "required": true
@@ -150,6 +159,144 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/manager.Event"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "manager"
+                ],
+                "summary": "Создать настройку мероприятия",
+                "parameters": [
+                    {
+                        "description": "EventCfg object",
+                        "name": "test",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/manager.EventCfgInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/manager/events/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "manager"
+                ],
+                "summary": "Обновить настройку мероприятия",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Config ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "EventCfg object",
+                        "name": "test",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/manager.EventCfgInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/manager/events/{id}/specializations": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Получение списка специализаций конкретного мероприятия",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "manager"
+                ],
+                "summary": "Получить специализации мероприятия",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/manager.EventSpecializationsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "404": {
@@ -537,6 +684,9 @@ const docTemplate = `{
                 "order_number": {
                     "type": "integer"
                 },
+                "points": {
+                    "type": "integer"
+                },
                 "question_id": {
                     "type": "integer"
                 },
@@ -548,9 +698,23 @@ const docTemplate = `{
                 }
             }
         },
+        "intern.StartAttemptRequest": {
+            "type": "object",
+            "properties": {
+                "application_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "intern.StartAttemptResponse": {
             "type": "object",
             "properties": {
+                "application_id": {
+                    "type": "integer"
+                },
+                "config_id": {
+                    "type": "integer"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -559,6 +723,15 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/intern.QuestionInfo"
                     }
+                },
+                "test_id": {
+                    "type": "integer"
+                },
+                "threshold": {
+                    "type": "number"
+                },
+                "time_limit": {
+                    "type": "integer"
                 },
                 "title": {
                     "type": "string"
@@ -598,38 +771,6 @@ const docTemplate = `{
                     "$ref": "#/definitions/intern.UserAnswer"
                 },
                 "question_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "manager.CreateEventCfgInfo": {
-            "type": "object",
-            "properties": {
-                "event_id": {
-                    "type": "integer"
-                },
-                "extra_threshold": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/manager.ExtraThresholdInfo"
-                    }
-                },
-                "fail_text": {
-                    "type": "string"
-                },
-                "specialization_id": {
-                    "type": "integer"
-                },
-                "success_text": {
-                    "type": "string"
-                },
-                "test_id": {
-                    "type": "integer"
-                },
-                "threshold": {
-                    "type": "number"
-                },
-                "time_limit": {
                     "type": "integer"
                 }
             }
@@ -688,6 +829,61 @@ const docTemplate = `{
                 }
             }
         },
+        "manager.EventCfgInfo": {
+            "type": "object",
+            "properties": {
+                "event_id": {
+                    "type": "integer"
+                },
+                "extra_threshold": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/manager.ExtraThresholdInfo"
+                    }
+                },
+                "fail_text": {
+                    "type": "string"
+                },
+                "specialization_id": {
+                    "type": "integer"
+                },
+                "success_text": {
+                    "type": "string"
+                },
+                "test_id": {
+                    "type": "integer"
+                },
+                "threshold": {
+                    "type": "number"
+                },
+                "time_limit": {
+                    "type": "integer"
+                }
+            }
+        },
+        "manager.EventSpecializationsResponse": {
+            "type": "object",
+            "properties": {
+                "end_date": {
+                    "type": "string"
+                },
+                "event_id": {
+                    "type": "integer"
+                },
+                "event_name": {
+                    "type": "string"
+                },
+                "specializations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/manager.Specialization"
+                    }
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
         "manager.ExtraThresholdInfo": {
             "type": "object",
             "properties": {
@@ -699,6 +895,17 @@ const docTemplate = `{
                 },
                 "threshold": {
                     "type": "number"
+                }
+            }
+        },
+        "manager.Specialization": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },

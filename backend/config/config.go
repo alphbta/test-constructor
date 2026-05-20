@@ -13,6 +13,8 @@ type Config struct {
 	AdminPassword string
 	JWTSecret     string
 	JWTTTL        int64
+	CRMService    string
+	CRMToken      string
 }
 
 func Load() *Config {
@@ -37,6 +39,11 @@ func Load() *Config {
 	if jwtSecret == "" {
 		jwtSecret = "17a3229b-e5c6-4ab0-ba86-3d87cb7f23fe"
 	}
+	crmService := os.Getenv("CRM_SERVICE")
+	if crmService == "" {
+		crmService = "http://127.0.0.1:8000"
+	}
+	crmToken := os.Getenv("CRM_TOKEN")
 
 	var jwtTTL int64 = 24
 
@@ -46,5 +53,7 @@ func Load() *Config {
 		adminPassword,
 		jwtSecret,
 		jwtTTL,
+		crmService,
+		crmToken,
 	}
 }

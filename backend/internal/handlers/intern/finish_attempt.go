@@ -1,9 +1,12 @@
 package intern
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"slices"
+	"test-constructor/config"
 	"test-constructor/internal/auth"
 	"test-constructor/internal/database"
 	"test-constructor/internal/middleware"
@@ -12,6 +15,16 @@ import (
 
 	"gorm.io/datatypes"
 )
+
+type CRMResultData struct {
+	SessionID   string `json:"session_id"`
+	TestID      string `json:"test_id"`
+	Score       int    `json:"score"`
+	MaxScore    int    `json:"max_score"`
+	IsPassed    bool   `json:"is_passed"`
+	CompletedAt string `json:"completed_at"`
+	StartedAt   string `json:"started_at"`
+}
 
 type FinishAttemptRequest struct {
 	UserAnswers []UserAnswerInfo
@@ -59,13 +72,16 @@ func FinishAttempt(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var attempt models.Attempt
-	if err := database.DB.Preload("Test").
+	if err := database.DB.Preload("EventConfig").
+		Preload("EventConfig.ExtraThreshold").
+		Preload("EventConfig.Test").
 		Where("intern_id = ? AND end_time IS NULL", claims.UserID).
 		First(&attempt).Error; err != nil {
 		http.Error(w, "Активная попытка не найдена", http.StatusNotFound)
 		return
 	}
 
+	test := attempt.EventConfig.Test
 	userPoints := 0
 	maxPoints := 0
 	for _, answerInfo := range req.UserAnswers {
@@ -75,7 +91,7 @@ func FinishAttempt(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if question.TestID != attempt.TestID {
+		if question.TestID != test.ID {
 			http.Error(w, "Тесты не совпадают", http.StatusBadRequest)
 			return
 		}
@@ -140,32 +156,77 @@ func FinishAttempt(w http.ResponseWriter, r *http.Request) {
 	now := time.Now()
 	attempt.EndTime = &now
 	attempt.Score = float64(userPoints)
-	//var passed bool
-	//if attempt.Test.IsPercentage {
-	//	percentage := (float64(userPoints) / float64(maxPoints)) * 100
-	//	passed = percentage >= float64(attempt.Test.Threshold)
-	//} else {
-	//	passed = userPoints >= attempt.Test.Threshold
-	//}
 
-	//attempt.Passed = passed
-	//if err := database.DB.Save(&attempt).Error; err != nil {
-	//	http.Error(w, err.Error(), http.StatusInternalServerError)
-	//	return
-	//}
+	passed := float64(userPoints) > attempt.EventConfig.Threshold
 
-	//resultText := attempt.Test.FailText
-	//if passed {
-	//	resultText = attempt.Test.SuccessText
-	//}
+	attempt.Passed = passed
+	if err := database.DB.Save(&attempt).Error; err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	//response := FinishAttemptResponse{
-	//	Result:        resultText,
-	//	Score:         userPoints,
-	//	MaxTestPoints: maxPoints,
-	//	Passed:        passed,
-	//}
+	resultText := attempt.EventConfig.FailText
+	if passed {
+		resultText = attempt.EventConfig.SuccessText
+	}
 
-	//w.Header().Set("Content-Type", "application/json")
-	//json.NewEncoder(w).Encode(response)
+	crmResult := CRMResultData{
+		SessionID:   fmt.Sprintf("%d", attempt.AttemptID),
+		TestID:      fmt.Sprintf("%d", attempt.EventConfig.ConfigID),
+		Score:       userPoints,
+		MaxScore:    maxPoints,
+		IsPassed:    passed,
+		CompletedAt: now.Format("2006-01-02T15:04:05Z"),
+		StartedAt:   attempt.StartTime.Format("2006-01-02T15:04:05Z"),
+	}
+
+	if err := sendResultsToCRM(crmResult, attempt.ApplicationID); err != nil {
+		fmt.Printf("Ошибка отправки результатов в CRM: %v\n", err)
+	}
+
+	response := FinishAttemptResponse{
+		Result:        resultText,
+		Score:         userPoints,
+		MaxTestPoints: maxPoints,
+		Passed:        passed,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+func sendResultsToCRM(result CRMResultData, applicationID uint) error {
+	cfg := config.Load()
+	crmService := cfg.CRMService
+	crmToken := cfg.CRMToken
+	url := crmService + fmt.Sprintf("/api/users/integration/applications/%d/test-results/", applicationID)
+
+	resultJSON, err := json.Marshal(result)
+	if err != nil {
+		return fmt.Errorf("ошибка маршалинга данных: %v", err)
+	}
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(resultJSON))
+	if err != nil {
+		return fmt.Errorf("ошибка создания запроса: %v", err)
+	}
+
+	req.Header.Set("X-Service-Token", crmToken)
+	req.Header.Set("Accept", "application/json")
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("ошибка отправки запроса: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		var errorResponse map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&errorResponse)
+		return fmt.Errorf("CRM вернул ошибку %d: %v", resp.StatusCode, errorResponse)
+	}
+
+	fmt.Println("Результаты успешно отправлены в Django")
+	return nil
 }
