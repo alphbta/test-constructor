@@ -22,33 +22,37 @@ type InternAttemptResponse struct {
 func GetAttempts(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(middleware.UserContextKey).(*auth.JWTClaims)
 	if !ok {
-		http.Error(w, "Authentication failed", http.StatusUnauthorized)
+		http.Error(w, "Пользователь не авторизован", http.StatusUnauthorized)
 		return
 	}
 
 	var user models.User
 	if err := database.DB.First(&user, claims.UserID).Error; err != nil {
-		http.Error(w, "User not found", http.StatusInternalServerError)
+		http.Error(w, "Пользователь не найден", http.StatusInternalServerError)
 		return
 	}
 
 	var attempts []models.Attempt
-	if err := database.DB.Preload("User").Find(&attempts).Error; err != nil {
+	if err := database.DB.Preload("EventConfig").
+		Preload("EventConfig.ExtraThreshold").
+		Preload("EventConfig.Test").
+		Find(&attempts).Error; err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	var attemptsInfo []AttemptInfo
 	for _, attempt := range attempts {
 		var resultText string
-		//if attempt.Passed {
-		//	resultText = attempt.Test.SuccessText
-		//} else {
-		//	resultText = attempt.Test.FailText
-		//}
+		if attempt.Passed {
+			resultText = attempt.EventConfig.SuccessText
+		} else {
+			resultText = attempt.EventConfig.FailText
+		}
 
 		attemptInfo := AttemptInfo{
 			attempt.AttemptID,
-			attempt.Test.Title,
+			attempt.EventConfig.Test.Title,
 			resultText,
 		}
 

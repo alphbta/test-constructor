@@ -40,12 +40,14 @@ func main() {
 	api.Use(middleware.AuthMiddleware)
 
 	m := api.PathPrefix("/manager").Subrouter()
-	m.Use(middleware.ManagerMiddleware)
+	//m.Use(middleware.ManagerMiddleware)
 	m.HandleFunc("/tests", manager.GetTests).Methods("GET")
 	m.HandleFunc("/tests", manager.CreateTest).Methods("POST")
 	m.HandleFunc("/tests/delete/{id}", manager.DeleteTest).Methods("POST")
 	m.HandleFunc("/events", manager.GetEvents).Methods("GET")
 	m.HandleFunc("/events", manager.CreateConfig).Methods("POST")
+	m.HandleFunc("/events/{id}", manager.UpdateConfig).Methods("PUT")
+	m.HandleFunc("/events/{id}/specializations", manager.GetEventSpecializations).Methods("GET")
 
 	i := api.PathPrefix("/intern").Subrouter()
 	i.Use(middleware.InternMiddleware)
