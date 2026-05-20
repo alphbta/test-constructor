@@ -10,7 +10,7 @@ import back2 from '../assets/back2.svg';
 import { useNavigate } from 'react-router-dom';
 import plusIcon from '../assets/plus.svg';
 import korzinaIcon from '../assets/korzina.svg';
-
+import massageIcon from '../assets/message.svg';
 // Моки для специализаций (замени на загрузку из API, если нужно)
 const allSpecsMock = [
     { id: 1, name: 'Frontend' },
@@ -107,7 +107,26 @@ export default function EventConfigPage() {
     const handleRemoveSelected = (idToRemove) => {
         setSelectedTests(prev => prev.filter(id => id !== idToRemove));
     };
+    const handleDeleteCriteria = (index) => {
+        setCriteria(prev =>
+            prev.filter((_, i) => i !== index)
+        );
+    };
 
+    const handleDeleteTest = (criteriaIndex, testIndex) => {
+        setCriteria(prev =>
+            prev.map((item, i) => {
+                if (i !== criteriaIndex) return item;
+
+                return {
+                    ...item,
+                    extraTests: item.extraTests.filter(
+                        (_, idx) => idx !== testIndex
+                    )
+                };
+            })
+        );
+    };
     return (
         <div className="event-config-page">
             {/* Левая панель */}
@@ -162,9 +181,16 @@ export default function EventConfigPage() {
                     onChange={handleCriteriaChange}
                     onAdd={handleAddCriteria}
                     onAddTest={idx => openModal(idx)}
+
+                    onDelete={handleDeleteCriteria}
+                    onDeleteTest={handleDeleteTest}
+                    testsList={tests}
                 />
                 <div className="fail-message-block">
-                    <p>Сообщение при провальном прохождении</p>
+                    <div className="fail-message-header">
+                        <img src={massageIcon} alt="" style={{ width: '32px', height: '32px' }} />
+                        <p className="fail-message-title">Сообщение при провальном прохождении</p>
+                    </div>
                     <input
                         type="text"
                         placeholder="Введите текст сообщения при провальном прохождении..."

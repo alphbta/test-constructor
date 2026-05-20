@@ -14,6 +14,7 @@ import Events from "./pages/Events.jsx";
 import Candidates from "./pages/Candidates.jsx";
 import EventConfigPage from "./components/EventConfigPage";
 
+import StatisticsEvent from "./pages/StatisticsEvent";
 
 function App() {
     return (
@@ -44,6 +45,10 @@ function App() {
 
                 <Route path="/event-config" element={<EventConfigPage />} />
 
+                <Route
+                    path="/event-statistics/:eventId"
+                    element={<StatisticsEvent />}
+                />
 
             </Routes>
         </BrowserRouter>

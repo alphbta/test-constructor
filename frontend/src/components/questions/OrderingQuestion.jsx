@@ -2,8 +2,9 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import DeleteIcon from "../../assets/delete.svg?react";
 import DeleteIconSub from "../../assets/delete_sub.svg?react";
-import ScoreInput from "../details/ScoreInput.jsx";
 
+import CorrectOrderIcon from "../../assets/CorrectOrder.svg";
+import ScoreInput2 from "../details/ScoreInput2.jsx";
 function OrderingQuestion({ question, updateQuestion, deleteQuestion }) {
     const {
         attributes,
@@ -54,6 +55,16 @@ function OrderingQuestion({ question, updateQuestion, deleteQuestion }) {
                             </span>
                     </div>
                 </div>
+                <div className="q-header1">
+                    <span>
+                            <img
+                                src={CorrectOrderIcon}
+                                alt="CorrectOrder"
+                                style={{ width: '36px', height: '36px' }}
+                            />
+                    </span>
+                    На расположения в правильном порядке
+                </div>
                 <div className="q-header">
                 <span>
                     {question.order}. <input
@@ -82,6 +93,10 @@ function OrderingQuestion({ question, updateQuestion, deleteQuestion }) {
                             value={item.text}
                             onChange={(e) => updateItem(index, e.target.value)}
                         />
+                        <ScoreInput2
+                            value={question.maxScore}
+                            onChange={val => updateQuestion(question.id, "maxScore", val)}
+                        />
                         <button
                             className="delete-answer-btn"
                             onClick={() => deleteItem(index)}
@@ -95,12 +110,6 @@ function OrderingQuestion({ question, updateQuestion, deleteQuestion }) {
             <button className="add-answer-btn" onClick={addItem}>
                 + Добавить ряд
             </button>
-
-            <ScoreInput
-                value={question.maxScore}
-                onChange={val => updateQuestion(question.id, "maxScore", val)}
-            />
-
         </div>
     );
 }

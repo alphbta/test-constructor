@@ -3,7 +3,7 @@ import { CSS } from "@dnd-kit/utilities";
 import DeleteIcon from "../../assets/delete.svg?react";
 import DeleteIconSub from "../../assets/delete_sub.svg?react";
 import ScoreInput from "../details/ScoreInput.jsx";
-
+import ManualIcon from "../../assets/Manual.svg";
 function ManualInputQuestion({ question, updateQuestion, deleteQuestion }) {
     const {
         attributes,
@@ -39,6 +39,7 @@ function ManualInputQuestion({ question, updateQuestion, deleteQuestion }) {
     return (
         <div ref={setNodeRef} style={style} className="question-block manual-input">
             <div className = "">
+
                 <div className = "question-up">
                     <span {...attributes} {...listeners} className="drag-handle">
                         <div style={{lineHeight: '0.2'}}>
@@ -48,12 +49,24 @@ function ManualInputQuestion({ question, updateQuestion, deleteQuestion }) {
                     </span>
 
 
+
                     <div className="q-icons">
                             <span onClick={() => deleteQuestion(question.id)}>
                                 <DeleteIcon style={{ width: '24px', height: '24px' }}/>
                             </span>
                     </div>
                 </div>
+                <div className="q-header1">
+                    <span>
+                            <img
+                                 src={ManualIcon}
+                                alt="manual"
+                                style={{ width: '36px', height: '36px' }}
+                            />
+                    </span>
+                    Задание на ручной ввод
+                </div>
+
                 <div className="q-header">
                     <span>
                         {question.order}. <input
@@ -64,7 +77,9 @@ function ManualInputQuestion({ question, updateQuestion, deleteQuestion }) {
                     />
                     </span>
                 </div>
+
             </div>
+
             <div className="block-questions99">
             <div className="section-title">Правильные ответы</div>
                 <div className="answers-list">

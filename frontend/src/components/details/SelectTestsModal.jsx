@@ -7,18 +7,20 @@ export default function SelectTestsModal({ open, tests, selected, onSelect, onAp
     if (!open) return null;
 
     const filteredTests = tests.filter(test =>
-        test.title.toLowerCase().includes(searchTerm.toLowerCase())
+        test.title?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content">
-                <h3>
-                    Выберите тесты
-                    <button className="modal-close-btn" onClick={onClose}>✕</button>
-                </h3>
+        <div className="select-tests-modal-overlay" onClick={onClose}>
+            <div className="select-tests-modal" onClick={(e) => e.stopPropagation()}>
+                {/* Заголовок */}
+                <div className="select-tests-modal-header">
+                    <h3>Выберите тесты</h3>
+                    <button className="select-tests-modal-close" onClick={onClose}>✕</button>
+                </div>
 
-                <div className="modal-search">
+                {/* Поиск */}
+                <div className="select-tests-modal-search">
                     <input
                         type="text"
                         placeholder="Введите название теста"
@@ -26,24 +28,44 @@ export default function SelectTestsModal({ open, tests, selected, onSelect, onAp
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <div className="modal-footer">
-                <ul className="modal-tests-list">
-                    {filteredTests.map(test => (
-                        <li key={test.id}>
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={selected.includes(test.id)}
-                                    onChange={() => onSelect(test.id)}
-                                />
-                                {test.title}
-                            </label>
-                        </li>
-                    ))}
-                </ul>
+
+                {/* Сетка тестов */}
+                <div className="select-tests-modal-list-wrapper">
+                    {filteredTests.length === 0 ? (
+                        <div className="select-tests-empty">
+                            Тесты не найдены
+                        </div>
+                    ) : (
+                        <div className="select-tests-grid">
+                            {filteredTests.map((test) => (
+                                <div
+                                    key={test.id}
+                                    className="select-tests-card"
+                                    onClick={() => onSelect(test.id)}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        className="select-tests-checkbox"
+                                        checked={selected.includes(test.id)}
+                                        onChange={() => onSelect(test.id)}
+                                        onClick={(e) => e.stopPropagation()}
+                                    />
+                                    <span className="select-tests-card-title">
+                                        {test.title && test.title.length > 15
+                                            ? `${test.title.substring(0, 15)}...`
+                                            : test.title || "Без названия"
+                                        }
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
-                <div className="modal-btns">
-                    <button onClick={onApply}>Сохранить</button>
+
+                {/* Кнопка сохранения */}
+                <div className="select-tests-modal-footer">
+                    <button onClick={onApply}>Сохранить
+                    </button>
                 </div>
             </div>
         </div>

@@ -2,7 +2,8 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import DeleteIcon from "../../assets/delete.svg?react";
 import DeleteIconSub from "../../assets/delete_sub.svg?react";
-import ScoreInput from "../details/ScoreInput.jsx";
+import MultipIcon from "../../assets/MultipleСhoice.svg";
+import ScoreInput2 from "../details/ScoreInput2.jsx";
 
 function MultipleChoiceQuestion({ question, updateQuestion, deleteQuestion }) {
     const {
@@ -53,6 +54,16 @@ function MultipleChoiceQuestion({ question, updateQuestion, deleteQuestion }) {
                             </span>
                     </div>
                 </div>
+                <div className="q-header1">
+                     <span>
+                            <img
+                                src={MultipIcon}
+                                alt="multu"
+                                style={{ width: '36px', height: '36px' }}
+                            />
+                    </span>
+                    Множественный выбор
+                </div>
                 <div className="q-header">
                 <span>
 
@@ -83,6 +94,10 @@ function MultipleChoiceQuestion({ question, updateQuestion, deleteQuestion }) {
                                 onChange={(e) => updateOption(index, "text", e.target.value)}
                             />
                         </label>
+                        <ScoreInput2
+                            value={question.maxScore}
+                            onChange={val => updateQuestion(question.id, "maxScore", val)}
+                        />
                         <button
                             className="delete-answer-btn"
                             onClick={() => deleteOption(index)}
@@ -96,41 +111,6 @@ function MultipleChoiceQuestion({ question, updateQuestion, deleteQuestion }) {
             <button className="add-answer-btn" onClick={addOption}>
                 + Добавить вариант
             </button>
-
-            <div className="settings">
-                <div className="setting-title">Настройки</div>
-                <div className="setting-row">
-                    <span>Зависимость баллов от % верных ответов</span>
-                </div>
-                <div className="setting-row">
-                    <label>
-                        <input
-                            type="checkbox"
-                            name={`scoring-${question.id}`}
-                            checked={question.scoringType === "allOrNothing"}
-                            onChange={() => updateQuestion(question.id, "scoringType", "allOrNothing")}
-                        />
-                        Только 100% или 0
-                    </label>
-                </div>
-                <div className="setting-row">
-                    <label>
-                        <input
-                            type="checkbox"
-                            name={`scoring-${question.id}`}
-                            checked={question.scoringType === "partial" || false}
-                            onChange={() => updateQuestion(question.id, "scoringType", "partial")}
-                        />
-                        Баллы за частично верные ответы
-                    </label>
-                </div>
-            </div>
-
-            <ScoreInput
-                value={question.maxScore}
-                onChange={val => updateQuestion(question.id, "maxScore", val)}
-            />
-
         </div>
     );
 }

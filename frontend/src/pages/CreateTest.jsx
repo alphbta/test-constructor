@@ -525,7 +525,7 @@ export default function CreateTest() {
                     <div className="tests-line"></div>
                     <div className="title-input-container">
                         <input
-                            className="test-title"
+                            className="test-desk1"
                             placeholder="Название"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
