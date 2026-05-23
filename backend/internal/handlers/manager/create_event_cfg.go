@@ -24,9 +24,10 @@ type EventCfgInfo struct {
 }
 
 type ExtraThresholdInfo struct {
-	Threshold float64 `json:"threshold"`
-	Message   string  `json:"message"`
-	TestID    uint    `json:"test_id"`
+	Threshold     float64 `json:"threshold"`
+	Message       string  `json:"message"`
+	TestID        uint    `json:"test_id"`
+	TestThreshold float64 `json:"test_threshold"`
 }
 
 // @Summary Создать настройку мероприятия
@@ -92,11 +93,29 @@ func CreateConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, eThreshold := range req.ExtraThreshold {
+		extraEventCFG := models.EventConfig{
+			EventID:          req.EventID,
+			SpecializationID: req.SpecializationID,
+			TestID:           eThreshold.TestID,
+			CreatorID:        userID,
+			SuccessText:      req.SuccessText,
+			FailText:         req.FailText,
+			TimeLimit:        req.TimeLimit,
+			Threshold:        eThreshold.TestThreshold,
+			IsExtra:          true,
+		}
+
+		if err := transaction.Create(&extraEventCFG).Error; err != nil {
+			transaction.Rollback()
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		extraThreshold := models.ExtraThreshold{
-			ConfigID:  eventCFG.ConfigID,
-			Threshold: eThreshold.Threshold,
-			Message:   eThreshold.Message,
-			TestID:    eThreshold.TestID,
+			ConfigID:      eventCFG.ConfigID,
+			Threshold:     eThreshold.Threshold,
+			Message:       eThreshold.Message,
+			ExtraConfigID: extraEventCFG.EventID,
 		}
 
 		if err := transaction.Create(&extraThreshold).Error; err != nil {
@@ -126,7 +145,8 @@ func UpdateConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	configID, err := strconv.ParseUint(vars["id"], 10, 32)
+	id, err := strconv.ParseUint(vars["id"], 10, 32)
+	configID := uint(id)
 	if err != nil {
 		http.Error(w, "Неверный ID конфигурации", http.StatusBadRequest)
 		return
@@ -186,6 +206,22 @@ func UpdateConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var existingExtraThresholds []models.ExtraThreshold
+	if err := transaction.Where("config_id = ?", configID).
+		Preload("ExtraConfig").
+		Find(&existingExtraThresholds).Error; err != nil {
+		transaction.Rollback()
+		http.Error(w, "Ошибка получения дополнительных порогов: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	existingExtraConfigMap := make(map[uint]models.EventConfig)
+	for _, et := range existingExtraThresholds {
+		if et.ExtraConfigID > 0 {
+			existingExtraConfigMap[et.ExtraConfigID] = et.ExtraConfig
+		}
+	}
+
 	if err := transaction.Where("config_id = ?", existingConfig.ConfigID).Delete(&models.ExtraThreshold{}).Error; err != nil {
 		transaction.Rollback()
 		http.Error(w, "Ошибка удаления старых порогов: "+err.Error(), http.StatusInternalServerError)
@@ -193,17 +229,80 @@ func UpdateConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, eThreshold := range req.ExtraThreshold {
+		var extraConfigID uint
+
+		existingExtraConfig, exists := findExistingExtraConfig(existingExtraConfigMap, eThreshold.TestID)
+
+		if exists {
+			extraConfigUpdates := models.EventConfig{
+				EventID:          req.EventID,
+				SpecializationID: req.SpecializationID,
+				TestID:           eThreshold.TestID,
+				SuccessText:      req.SuccessText,
+				FailText:         req.FailText,
+				TimeLimit:        req.TimeLimit,
+				Threshold:        eThreshold.TestThreshold,
+				IsExtra:          true,
+			}
+
+			if err := transaction.Model(&existingExtraConfig).
+				Updates(extraConfigUpdates).Error; err != nil {
+				transaction.Rollback()
+				http.Error(w, "Ошибка обновления дополнительного теста: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			extraConfigID = existingExtraConfig.ConfigID
+
+			delete(existingExtraConfigMap, existingExtraConfig.ConfigID)
+		} else {
+			extraEventCFG := models.EventConfig{
+				EventID:          req.EventID,
+				SpecializationID: req.SpecializationID,
+				TestID:           eThreshold.TestID,
+				CreatorID:        userID,
+				SuccessText:      req.SuccessText,
+				FailText:         req.FailText,
+				TimeLimit:        req.TimeLimit,
+				Threshold:        eThreshold.TestThreshold,
+				IsExtra:          true,
+			}
+
+			if err := transaction.Create(&extraEventCFG).Error; err != nil {
+				transaction.Rollback()
+				http.Error(w, "Ошибка создания дополнительного теста: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			extraConfigID = extraEventCFG.ConfigID
+		}
+
 		extraThreshold := models.ExtraThreshold{
-			ConfigID:  existingConfig.ConfigID,
-			Threshold: eThreshold.Threshold,
-			Message:   eThreshold.Message,
-			TestID:    eThreshold.TestID,
+			ConfigID:      configID,
+			Threshold:     eThreshold.Threshold,
+			Message:       eThreshold.Message,
+			ExtraConfigID: extraConfigID,
 		}
 
 		if err := transaction.Create(&extraThreshold).Error; err != nil {
 			transaction.Rollback()
-			http.Error(w, "Ошибка создания порога: "+err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Ошибка создания дополнительного порога: "+err.Error(), http.StatusInternalServerError)
 			return
+		}
+	}
+
+	for _, unusedConfig := range existingExtraConfigMap {
+		var count int64
+		transaction.Model(&models.ExtraThreshold{}).
+			Where("extra_config_id = ?", unusedConfig.ConfigID).
+			Count(&count)
+
+		if count == 0 {
+			if err := transaction.Delete(&unusedConfig).Error; err != nil {
+				transaction.Rollback()
+				http.Error(w, "Ошибка удаления неиспользуемого дополнительного теста: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
 		}
 	}
 
@@ -213,4 +312,13 @@ func UpdateConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func findExistingExtraConfig(existingConfigs map[uint]models.EventConfig, testID uint) (*models.EventConfig, bool) {
+	for _, config := range existingConfigs {
+		if config.TestID == testID {
+			return &config, true
+		}
+	}
+	return nil, false
 }

@@ -72,7 +72,6 @@ func CreateTest(w http.ResponseWriter, r *http.Request) {
 	test := models.Test{
 		Title:       req.Title,
 		Description: req.Description,
-		IsExtra:     req.IsExtra,
 		CreatorID:   userID,
 	}
 

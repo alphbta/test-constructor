@@ -15,7 +15,13 @@ var DB *gorm.DB
 
 func Connect() {
 	cfg := config.Load()
-	dsn := fmt.Sprintf("host=localhost user=postgres password=%s dbname=testconstructor port=5432 sslmode=disable", cfg.DBPassword)
+	dsn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
+		cfg.DBHost,
+		cfg.DBPort,
+		cfg.DBUser,
+		cfg.DBName,
+		cfg.DBPassword,
+	)
 	connection, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Ошибка подключения к базе данных", err)
@@ -38,11 +44,11 @@ func Connect() {
 	}
 
 	if err := migrations.SeedRoles(DB); err != nil {
-		log.Fatal("Не удалось заполнить роли:", err)
+		log.Println("Не удалось заполнить роли:", err)
 	}
 
 	if err := migrations.SeedAdmin(DB); err != nil {
-		log.Fatal("Не удалось создать админа", err)
+		log.Println("Не удалось создать админа", err)
 	}
 
 	log.Println("База данных подключена")
