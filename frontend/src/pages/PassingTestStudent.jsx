@@ -41,12 +41,10 @@ function SortableMatchAnswer({ id, text }) {
             style={style}
             className="match-answer-inner"
         >
-            {/* белый прямоугольник */}
             <div className="match-input">
                 {text}
             </div>
 
-            {/* точки справа, НЕ внутри match-input */}
             <button
                 className="match-answer-handle"
                 type="button"
@@ -82,7 +80,6 @@ function SortableOrderingItem({ id, text }) {
             className="ordering-inner"
         >
 
-            {/* точки справа, чуть отнесены от белого блока */}
             <button
                 className="match-answer-handle ordering-handle-right"
                 type="button"

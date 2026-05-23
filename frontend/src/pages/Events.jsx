@@ -99,7 +99,11 @@ export default function Events() {
                                     </button>
 
 
-                                    <button className="event-btn statistics-btn" title="Статистика">
+                                    <button
+                                        className="event-btn statistics-btn"
+                                        title="Статистика"
+                                        onClick={() => navigate(`/event-statistics/${event.id}`)}
+                                    >
                                         <StatisticsIcon />
                                     </button>
                                 </div>

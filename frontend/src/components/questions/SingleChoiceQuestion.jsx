@@ -2,7 +2,8 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import DeleteIcon from "../../assets/delete.svg?react";
 import DeleteIconSub from "../../assets/delete_sub.svg?react";
-import ScoreInput from "../details/ScoreInput.jsx";
+import SingleChoiseIcon from "../../assets/SingleChoise.svg";
+import ScoreInput2 from "../details/ScoreInput2.jsx";
 
 function SingleChoiceQuestion({ question, updateQuestion, deleteQuestion }) {
     const {
@@ -54,6 +55,16 @@ function SingleChoiceQuestion({ question, updateQuestion, deleteQuestion }) {
                             </span>
                     </div>
                 </div>
+                <div className="q-header1">
+                    <span>
+                            <img
+                                src={SingleChoiseIcon}
+                                alt="SingleChoise
+                                "
+                                style={{ width: '36px', height: '36px' }}
+                            />
+                    </span>
+                    Одиночный выбор</div>
                 <div className="q-header">
                 <span>
                     {question.order}. <input
@@ -90,6 +101,10 @@ function SingleChoiceQuestion({ question, updateQuestion, deleteQuestion }) {
                                 onChange={(e) => updateOption(index, "text", e.target.value)}
                             />
                         </label>
+                        <ScoreInput2
+                            value={question.maxScore}
+                            onChange={val => updateQuestion(question.id, "maxScore", val)}
+                        />
                         <button
                             className="delete-answer-btn"
                             onClick={() => deleteOption(index)}
@@ -103,12 +118,6 @@ function SingleChoiceQuestion({ question, updateQuestion, deleteQuestion }) {
             <button className="add-answer-btn" onClick={addOption}>
                 + Добавить вариант
             </button>
-
-            <ScoreInput
-                value={question.maxScore}
-                onChange={val => updateQuestion(question.id, "maxScore", val)}
-            />
-
         </div>
     );
 }

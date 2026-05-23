@@ -2,7 +2,8 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import DeleteIcon from "../../assets/delete.svg?react";
 import DeleteIconSub from "../../assets/delete_sub.svg?react";
-import ScoreInput from "../details/ScoreInput.jsx";
+import ScoreInput2 from "../details/ScoreInput2.jsx";
+import RatioIcon from "../../assets/Ratio.svg";
 
 function MatchingQuestion({ question, updateQuestion, deleteQuestion }) {
     const {
@@ -54,6 +55,16 @@ function MatchingQuestion({ question, updateQuestion, deleteQuestion }) {
                             </span>
                     </div>
                 </div>
+                <div className="q-header1">
+                     <span>
+                            <img
+                                src={RatioIcon}
+                                alt="Ratio"
+                                style={{ width: '36px', height: '36px' }}
+                            />
+                    </span>
+                    На соотношение
+                </div>
                 <div className="q-header">
                 <span>
 
@@ -89,6 +100,10 @@ function MatchingQuestion({ question, updateQuestion, deleteQuestion }) {
                             value={row.answer}
                             onChange={(e) => updateRow(index, "answer", e.target.value)}
                         />
+                        <ScoreInput2
+                            value={question.maxScore}
+                            onChange={val => updateQuestion(question.id, "maxScore", val)}
+                        />
                         <button
                             className="delete-answer-btn"
                             onClick={() => deleteRow(index)}
@@ -103,12 +118,6 @@ function MatchingQuestion({ question, updateQuestion, deleteQuestion }) {
             <button className="add-answer-btn" onClick={addRow}>
                 + Добавить ряд
             </button>
-
-            <ScoreInput
-                value={question.maxScore}
-                onChange={val => updateQuestion(question.id, "maxScore", val)}
-            />
-
         </div>
     );
 }
