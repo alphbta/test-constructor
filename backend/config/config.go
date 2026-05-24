@@ -15,6 +15,10 @@ type Config struct {
 	JWTTTL        int64
 	CRMService    string
 	CRMToken      string
+	DBHost        string
+	DBPort        string
+	DBName        string
+	DBUser        string
 }
 
 func Load() *Config {
@@ -44,6 +48,22 @@ func Load() *Config {
 		crmService = "http://127.0.0.1:8000"
 	}
 	crmToken := os.Getenv("CRM_TOKEN")
+	dbHost := os.Getenv("DB_HOST")
+	if dbHost == "" {
+		dbHost = "localhost"
+	}
+	dbPort := os.Getenv("DB_PORT")
+	if dbPort == "" {
+		dbPort = "5432"
+	}
+	dbName := os.Getenv("DB_NAME")
+	if dbName == "" {
+		dbName = "testconstructor"
+	}
+	dbUser := os.Getenv("DB_USER")
+	if dbUser == "" {
+		dbUser = "postgres"
+	}
 
 	var jwtTTL int64 = 24
 
@@ -55,5 +75,9 @@ func Load() *Config {
 		jwtTTL,
 		crmService,
 		crmToken,
+		dbHost,
+		dbPort,
+		dbName,
+		dbUser,
 	}
 }

@@ -219,6 +219,10 @@ definitions:
         type: string
       name:
         type: string
+      specializations:
+        items:
+          $ref: '#/definitions/manager.Specialization'
+        type: array
       start_date:
         type: string
     type: object
@@ -245,18 +249,10 @@ definitions:
     type: object
   manager.EventSpecializationsResponse:
     properties:
-      end_date:
-        type: string
-      event_id:
-        type: integer
-      event_name:
-        type: string
       specializations:
         items:
           $ref: '#/definitions/manager.Specialization'
         type: array
-      start_date:
-        type: string
     type: object
   manager.ExtraThresholdInfo:
     properties:
@@ -264,8 +260,32 @@ definitions:
         type: string
       test_id:
         type: integer
+      test_threshold:
+        type: number
       threshold:
         type: number
+    type: object
+  manager.GetUsersResponse:
+    properties:
+      users:
+        items:
+          $ref: '#/definitions/manager.UserInfo'
+        type: array
+    type: object
+  manager.QuestionStatInfo:
+    properties:
+      is_correct:
+        type: boolean
+      max_points:
+        type: integer
+      order_number:
+        type: integer
+      points_earned:
+        type: number
+      question_type:
+        type: string
+      text:
+        type: string
     type: object
   manager.Specialization:
     properties:
@@ -273,6 +293,13 @@ definitions:
         type: integer
       name:
         type: string
+    type: object
+  manager.StatisticsResponse:
+    properties:
+      attempts:
+        items:
+          $ref: '#/definitions/manager.UserAttemptInfo'
+        type: array
     type: object
   manager.TestInfo:
     properties:
@@ -291,6 +318,76 @@ definitions:
         items:
           $ref: '#/definitions/manager.TestInfo'
         type: array
+    type: object
+  manager.UserAttemptDetail:
+    properties:
+      attempt_id:
+        type: integer
+      event_name:
+        type: string
+      is_extra:
+        type: boolean
+      max_score:
+        type: integer
+      passed:
+        type: boolean
+      questions:
+        items:
+          $ref: '#/definitions/manager.QuestionStatInfo'
+        type: array
+      score:
+        type: number
+      test_title:
+        type: string
+    type: object
+  manager.UserAttemptInfo:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      is_extra:
+        type: boolean
+      last_name:
+        type: string
+      max_score:
+        type: integer
+      passed:
+        type: boolean
+      questions:
+        items:
+          $ref: '#/definitions/manager.QuestionStatInfo'
+        type: array
+      score:
+        type: number
+      time_spent_minutes:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  manager.UserInfo:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      surname:
+        type: string
+    type: object
+  manager.UserStatisticsResponse:
+    properties:
+      attempts:
+        items:
+          $ref: '#/definitions/manager.UserAttemptDetail'
+        type: array
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      user_id:
+        type: integer
     type: object
   models.ChoiceOption:
     properties:
@@ -540,6 +637,52 @@ paths:
       summary: Получить специализации мероприятия
       tags:
       - manager
+  /api/manager/events/{id}/statistics:
+    get:
+      consumes:
+      - application/json
+      description: Получение статистики всех попыток по мероприятию
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Фильтр по дополнительным тестам
+        in: body
+        name: is_extra
+        schema:
+          type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manager.StatisticsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Получить статистику по мероприятию
+      tags:
+      - manager
   /api/manager/tests:
     get:
       description: Получить список тестов
@@ -604,6 +747,65 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Удалить тест
+      tags:
+      - manager
+  /api/manager/users:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manager.GetUsersResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Список стажёров
+      tags:
+      - manager
+  /api/manager/users/{id}:
+    get:
+      description: Получение статистики всех попыток конкретного пользователя
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manager.UserStatisticsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Получить статистику пользователя
       tags:
       - manager
   /login:
