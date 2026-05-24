@@ -50,9 +50,9 @@ export default function CreateTest() {
     })();
 
     const editingTest =
-        (location.state?.test && location.state.test.questions
+        isEditing && location.state?.test && location.state.test.questions
             ? location.state.test
-            : storedEditingTest) || null;
+            : storedEditingTest || null;
 
     const deleteOnSave = location.state?.deleteOnSave || false;
 
@@ -84,7 +84,7 @@ export default function CreateTest() {
     );
 
     const [passingCriteria, setPassingCriteria] = useState(
-        isEditing
+        isEditing && editingTest
             ? {
                 type: editingTest?.is_percentage ? "percentage" : "points",
                 percentage: editingTest?.is_percentage
@@ -297,6 +297,7 @@ export default function CreateTest() {
                                 q.options?.map((opt) => ({
                                     text: opt.text,
                                     is_true: opt.isCorrect,
+                                    points: opt.points || 0,
                                 })) || [],
                         };
                         break;
@@ -307,6 +308,7 @@ export default function CreateTest() {
                                 q.options?.map((opt) => ({
                                     text: opt.text,
                                     is_true: opt.isCorrect,
+                                    points: opt.points || 0,
                                 })) || [],
                         };
                         break;
@@ -324,6 +326,7 @@ export default function CreateTest() {
                                 q.rows?.map((row) => ({
                                     left: row.option,
                                     right: row.answer,
+                                    points: row.points || 0,
                                 })) || [],
                         };
                         break;
@@ -334,6 +337,7 @@ export default function CreateTest() {
                                 q.items?.map((item, itemIdx) => ({
                                     text: item.text,
                                     order: itemIdx + 1,
+                                    points: item.points || 0,
                                 })) || [],
                         };
                         break;
@@ -433,9 +437,6 @@ export default function CreateTest() {
 
             console.log("Успешный ответ от сервера:", result);
 
-
-            console.log("Успешный ответ от сервера:", result);
-
             const savedId = result?.id || result?.test_id || editingTest?.id;
             if (savedId) {
                 try {
@@ -468,7 +469,6 @@ export default function CreateTest() {
                     console.error("Не удалось сохранить локальный тест с вопросами", e);
                 }
             }
-
 
             localStorage.removeItem("editingTest");
 

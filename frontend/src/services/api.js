@@ -29,6 +29,7 @@ api.interceptors.response.use(
         return Promise.reject(error);
     }
 );
+
 export const eventsAPI = {
     getEvents: () =>
         api.get('/api/manager/events'),
@@ -42,8 +43,15 @@ export const authAPI = {
         api.post('/login', { email, password }),
 }
 
+export const candidatesAPI = {
+    getCandidates: () =>
+        api.get('/api/manager/users'),
+
+    getCandidateDetails: (candidateId) =>
+        api.get(`/api/manager/users/${candidateId}`),
+}
+
 export const testsAPI = {
-    // Manager endpoints
     createTest: (testData) =>
         api.post('/api/manager/tests', testData),
 

@@ -94,14 +94,38 @@ export default function Tests() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const editTest = (test) => {
+    const editTest = async (test) => {
         console.log("Тест для редактирования:", test);
-        navigate("/create", {
-            state: { editing: true, test: test, deleteOnSave: true },
-        });
-        setOpenMenuId(null);
-    };
 
+        try {
+
+            let fullTest = test;
+
+            const savedTestsRaw = localStorage.getItem("savedTestsExtended");
+            if (savedTestsRaw) {
+                try {
+                    const savedTests = JSON.parse(savedTestsRaw);
+                    const found = savedTests.find(t => t.id === test.id);
+                    if (found) {
+                        fullTest = found;
+                        console.log("Найден сохранённый тест с деталями:", fullTest);
+                    }
+                } catch (e) {
+                    console.error("Ошибка при чтении localStorage:", e);
+                }
+            }
+
+            localStorage.setItem("editingTest", JSON.stringify(fullTest));
+
+            navigate("/create", {
+                state: { editing: true, test: fullTest, deleteOnSave: true },
+            });
+            setOpenMenuId(null);
+        } catch (error) {
+            console.error("Ошибка при редактировании теста:", error);
+            alert("Ошибка при загрузке теста для редактирования");
+        }
+    };
 
 
 
@@ -147,8 +171,12 @@ export default function Tests() {
 
     const shareTest = async (test) => {
         try {
+            const testLink = test.test_link;
 
-            const link = `http://localhost:5173/test/${test.test_link}`;
+            const key = `shared_test_${testLink}`;
+            localStorage.setItem(key, JSON.stringify(test));
+
+            const link = `http://localhost:5173/test/${testLink}`;
             setShareLink(link);
             setShareModalOpen(true);
         } catch (error) {
