@@ -87,6 +87,9 @@ definitions:
     type: object
   intern.FinishAttemptResponse:
     properties:
+      all_completed:
+        description: Все ли тесты мероприятия пройдены
+        type: boolean
       max_test_points:
         type: integer
       passed:
@@ -157,11 +160,52 @@ definitions:
       test_id:
         type: integer
       threshold:
-        type: number
+        type: integer
       time_limit:
         type: integer
       title:
         type: string
+    type: object
+  intern.TestInfo:
+    properties:
+      attempt_id:
+        type: integer
+      config_id:
+        type: integer
+      description:
+        type: string
+      is_extra:
+        type: boolean
+      max_score:
+        type: integer
+      passed:
+        type: boolean
+      score:
+        type: integer
+      status:
+        description: '"available", "locked", "in_progress", "completed"'
+        type: string
+      test_id:
+        type: integer
+      test_link:
+        type: string
+      time_limit:
+        type: integer
+      title:
+        type: string
+    type: object
+  intern.TestSelectionResponse:
+    properties:
+      all_completed:
+        type: boolean
+      event_id:
+        type: integer
+      specialization_id:
+        type: integer
+      tests:
+        items:
+          $ref: '#/definitions/intern.TestInfo'
+        type: array
     type: object
   intern.UserAnswer:
     properties:
@@ -480,7 +524,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Получение ответов стажёра
+      description: Получение ответов стажёра и проверка завершения всех тестов
       parameters:
       - description: Answers object
         in: body
@@ -501,14 +545,14 @@ paths:
       tags:
       - intern
   /api/intern/tests/{link}:
-    get:
+    post:
       consumes:
       - application/json
-      description: Создание попытки по ссылке конфигурации мероприятия
+      description: Создание попытки по ссылке конфигурации теста
       parameters:
-      - description: Start attempt object
+      - description: Application ID
         in: body
-        name: answers
+        name: body
         required: true
         schema:
           $ref: '#/definitions/intern.StartAttemptRequest'
@@ -526,7 +570,33 @@ paths:
             $ref: '#/definitions/intern.StartAttemptResponse'
       security:
       - ApiKeyAuth: []
-      summary: Пройти тест через конфигурацию мероприятия
+      summary: Начать тест по ссылке
+      tags:
+      - intern
+  /api/intern/tests/selection:
+    get:
+      description: Промежуточная страница со списком всех тестов в мероприятии
+      parameters:
+      - description: Event ID
+        in: query
+        name: event_id
+        required: true
+        type: integer
+      - description: Specialization ID
+        in: query
+        name: specialization_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/intern.TestSelectionResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Получить список тестов для прохождения
       tags:
       - intern
   /api/manager/events:

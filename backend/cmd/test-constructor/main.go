@@ -57,6 +57,7 @@ func main() {
 	i.HandleFunc("/tests", intern.GetAttempts).Methods("GET")
 	i.HandleFunc("/tests/{link}", intern.StartAttempt).Methods("GET")
 	i.HandleFunc("/attempt/finish", intern.FinishAttempt).Methods("POST")
+	i.HandleFunc("/tests/selection", intern.GetTestSelection).Methods("GET")
 
 	a := api.PathPrefix("/admin").Subrouter()
 	a.Use(middleware.AdminMiddleware)

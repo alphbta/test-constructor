@@ -12,7 +12,7 @@ type EventConfig struct {
 	FailText         string
 	TimeLimit        int       `gorm:"default:0"`
 	TestLink         uuid.UUID `gorm:"type:uuid;default:gen_random_uuid()"`
-	Threshold        float64
+	Threshold        int
 	IsExtra          bool             `gorm:"default:false"`
 	ExtraThreshold   []ExtraThreshold `gorm:"foreignKey:ConfigID;constraint:OnDelete:CASCADE;OnUpdate:CASCADE"`
 	Test             Test             `gorm:"foreignKey:TestID;constraint:OnDelete:CASCADE;OnUpdate:CASCADE"`

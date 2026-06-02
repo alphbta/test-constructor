@@ -61,7 +61,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Получение ответов стажёра",
+                "description": "Получение ответов стажёра и проверка завершения всех тестов",
                 "consumes": [
                     "application/json"
                 ],
@@ -93,14 +93,55 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/intern/tests/{link}": {
+        "/api/intern/tests/selection": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Создание попытки по ссылке конфигурации мероприятия",
+                "description": "Промежуточная страница со списком всех тестов в мероприятии",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "intern"
+                ],
+                "summary": "Получить список тестов для прохождения",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Event ID",
+                        "name": "event_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Specialization ID",
+                        "name": "specialization_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/intern.TestSelectionResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/intern/tests/{link}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Создание попытки по ссылке конфигурации теста",
                 "consumes": [
                     "application/json"
                 ],
@@ -110,11 +151,11 @@ const docTemplate = `{
                 "tags": [
                     "intern"
                 ],
-                "summary": "Пройти тест через конфигурацию мероприятия",
+                "summary": "Начать тест по ссылке",
                 "parameters": [
                     {
-                        "description": "Start attempt object",
-                        "name": "answers",
+                        "description": "Application ID",
+                        "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -787,6 +828,10 @@ const docTemplate = `{
         "intern.FinishAttemptResponse": {
             "type": "object",
             "properties": {
+                "all_completed": {
+                    "description": "Все ли тесты мероприятия пройдены",
+                    "type": "boolean"
+                },
                 "max_test_points": {
                     "type": "integer"
                 },
@@ -894,13 +939,75 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "threshold": {
-                    "type": "number"
+                    "type": "integer"
                 },
                 "time_limit": {
                     "type": "integer"
                 },
                 "title": {
                     "type": "string"
+                }
+            }
+        },
+        "intern.TestInfo": {
+            "type": "object",
+            "properties": {
+                "attempt_id": {
+                    "type": "integer"
+                },
+                "config_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "is_extra": {
+                    "type": "boolean"
+                },
+                "max_score": {
+                    "type": "integer"
+                },
+                "passed": {
+                    "type": "boolean"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "\"available\", \"locked\", \"in_progress\", \"completed\"",
+                    "type": "string"
+                },
+                "test_id": {
+                    "type": "integer"
+                },
+                "test_link": {
+                    "type": "string"
+                },
+                "time_limit": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "intern.TestSelectionResponse": {
+            "type": "object",
+            "properties": {
+                "all_completed": {
+                    "type": "boolean"
+                },
+                "event_id": {
+                    "type": "integer"
+                },
+                "specialization_id": {
+                    "type": "integer"
+                },
+                "tests": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/intern.TestInfo"
+                    }
                 }
             }
         },

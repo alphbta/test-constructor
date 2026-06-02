@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"slices"
 	"test-constructor/config"
 	"test-constructor/internal/auth"
 	"test-constructor/internal/database"
@@ -47,11 +46,12 @@ type FinishAttemptResponse struct {
 	Score         int    `json:"score"`
 	MaxTestPoints int    `json:"max_test_points"`
 	Passed        bool   `json:"passed"`
+	AllCompleted  bool   `json:"all_completed"` // Все ли тесты мероприятия пройдены
 }
 
 // @Summary Завершить тест
 // @Security ApiKeyAuth
-// @Description Получение ответов стажёра
+// @Description Получение ответов стажёра и проверка завершения всех тестов
 // @Tags intern
 // @Accept json
 // @Produce json
@@ -67,76 +67,66 @@ func FinishAttempt(w http.ResponseWriter, r *http.Request) {
 
 	var req FinishAttemptRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "Неправильный формат запроса: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	// Находим активную попытку
 	var attempt models.Attempt
 	if err := database.DB.Preload("EventConfig").
-		Preload("EventConfig.ExtraThreshold").
 		Preload("EventConfig.Test").
+		Preload("EventConfig.ExtraThreshold").
 		Where("intern_id = ? AND end_time IS NULL", claims.UserID).
 		First(&attempt).Error; err != nil {
 		http.Error(w, "Активная попытка не найдена", http.StatusNotFound)
 		return
 	}
 
-	test := attempt.EventConfig.Test
+	var questions []models.Question
+	if err := database.DB.Where("test_id = ?", attempt.EventConfig.TestID).
+		Find(&questions).Error; err != nil {
+		http.Error(w, "Ошибка загрузки вопросов", http.StatusInternalServerError)
+		return
+	}
+
+	questionMap := make(map[uint]models.Question)
+	for _, q := range questions {
+		questionMap[q.ID] = q
+	}
+
 	userPoints := 0
-	maxPoints := 0
+	maxPoints := attempt.MaxScore
+	correctAnswersCount := 0
+
 	for _, answerInfo := range req.UserAnswers {
-		var question models.Question
-		if err := database.DB.First(&question, answerInfo.QuestionID).Error; err != nil {
-			http.Error(w, "Вопрос не найден", http.StatusNotFound)
+		question, exists := questionMap[answerInfo.QuestionID]
+		if !exists {
+			http.Error(w, fmt.Sprintf("Вопрос с ID %d не найден", answerInfo.QuestionID), http.StatusNotFound)
 			return
 		}
 
-		if question.TestID != test.ID {
-			http.Error(w, "Тесты не совпадают", http.StatusBadRequest)
+		if question.TestID != attempt.EventConfig.TestID {
+			http.Error(w, "Ответы не соответствуют тесту", http.StatusBadRequest)
 			return
 		}
 
 		answer := answerInfo.Answer
-		maxPoints += question.Points
 		var options models.QuestionOptions
 		if err := json.Unmarshal(question.Options, &options); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Ошибка формата вопроса", http.StatusInternalServerError)
 			return
 		}
 
-		correct := true
-		switch question.Type {
-		case models.SingleChoice, models.MultipleChoice:
-			for i, choice := range options.Choices {
-				if choice.IsTrue != answer.Choices[i] {
-					correct = false
-				}
-			}
-		case models.Matching:
-			pairs := options.MatchingPairs
-			for i, pair := range pairs {
-				if pair != answer.MatchingPairs[i] {
-					correct = false
-				}
-			}
-		case models.CorrectOrder:
-			for i, item := range options.Sequence {
-				if item != answer.Sequence[i] {
-					correct = false
-				}
-			}
-		case models.TextInput:
-			if !slices.Contains(options.CorrectInput, answer.UserInput) {
-				correct = false
-			}
-		}
+		correct := checkAnswer(question.Type, options, answer)
 
 		if correct {
 			userPoints += question.Points
+			correctAnswersCount++
 		}
+
 		answerJSON, err := json.Marshal(answer)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Ошибка сохранения ответа", http.StatusInternalServerError)
 			return
 		}
 
@@ -145,23 +135,34 @@ func FinishAttempt(w http.ResponseWriter, r *http.Request) {
 			AttemptID:    attempt.AttemptID,
 			InternAnswer: datatypes.JSON(answerJSON),
 			IsCorrect:    correct,
+			Points: func() float64 {
+				if correct {
+					return float64(question.Points)
+				}
+				return 0
+			}(),
 		}
 
 		if err := database.DB.Create(&userAnswer).Error; err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Ошибка сохранения ответа в БД", http.StatusInternalServerError)
 			return
 		}
 	}
 
+	percentage := 0.0
+	if maxPoints > 0 {
+		percentage = float64(userPoints) / float64(maxPoints) * 100
+	}
+
+	passed := percentage >= float64(attempt.EventConfig.Threshold)
+
 	now := time.Now()
 	attempt.EndTime = &now
-	attempt.Score = float64(userPoints)
-
-	passed := float64(userPoints) > attempt.EventConfig.Threshold
-
+	attempt.Score = userPoints
 	attempt.Passed = passed
+
 	if err := database.DB.Save(&attempt).Error; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Ошибка сохранения попытки", http.StatusInternalServerError)
 		return
 	}
 
@@ -180,8 +181,12 @@ func FinishAttempt(w http.ResponseWriter, r *http.Request) {
 		StartedAt:   attempt.StartTime.Format("2006-01-02T15:04:05Z"),
 	}
 
-	if err := sendResultsToCRM(crmResult, attempt.ApplicationID); err != nil {
-		fmt.Printf("Ошибка отправки результатов в CRM: %v\n", err)
+	allCompleted := checkAllTestsCompleted(claims.UserID, attempt.EventConfig)
+
+	if allCompleted {
+		if err := sendResultsToCRM(crmResult, attempt.ApplicationID); err != nil {
+			fmt.Printf("Ошибка отправки результатов в CRM: %v\n", err)
+		}
 	}
 
 	response := FinishAttemptResponse{
@@ -189,10 +194,87 @@ func FinishAttempt(w http.ResponseWriter, r *http.Request) {
 		Score:         userPoints,
 		MaxTestPoints: maxPoints,
 		Passed:        passed,
+		AllCompleted:  allCompleted,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(response)
+}
+
+func checkAnswer(qType models.QType, options models.QuestionOptions, answer UserAnswer) bool {
+	switch qType {
+	case models.SingleChoice, models.MultipleChoice:
+		if len(answer.Choices) != len(options.Choices) {
+			return false
+		}
+		for i, choice := range options.Choices {
+			if choice.IsTrue != answer.Choices[i] {
+				return false
+			}
+		}
+		return true
+
+	case models.Matching:
+		if len(answer.MatchingPairs) != len(options.MatchingPairs) {
+			return false
+		}
+		for i, pair := range options.MatchingPairs {
+			if pair != answer.MatchingPairs[i] {
+				return false
+			}
+		}
+		return true
+
+	case models.CorrectOrder:
+		if len(answer.Sequence) != len(options.Sequence) {
+			return false
+		}
+		for i, item := range options.Sequence {
+			if item.Order != answer.Sequence[i].Order {
+				return false
+			}
+		}
+		return true
+
+	case models.TextInput:
+		if options.CaseSensitive {
+			for _, correctInput := range options.CorrectInput {
+				if answer.UserInput == correctInput {
+					return true
+				}
+			}
+		} else {
+			for _, correctInput := range options.CorrectInput {
+				if answer.UserInput == correctInput {
+					return true
+				}
+			}
+		}
+		return false
+	}
+
+	return false
+}
+
+func checkAllTestsCompleted(userID uint, currentConfig models.EventConfig) bool {
+	var allMainConfigs []models.EventConfig
+	database.DB.Where("event_id = ? AND specialization_id = ? AND is_extra = ?",
+		currentConfig.EventID, currentConfig.SpecializationID, false).
+		Find(&allMainConfigs)
+
+	for _, cfg := range allMainConfigs {
+		var attempt models.Attempt
+		err := database.DB.Where("intern_id = ? AND config_id = ? AND passed = ? AND end_time IS NOT NULL",
+			userID, cfg.ConfigID, true).
+			First(&attempt).Error
+
+		if err != nil {
+			return false
+		}
+	}
+
+	return true
 }
 
 func sendResultsToCRM(result CRMResultData, applicationID uint) error {
@@ -211,6 +293,7 @@ func sendResultsToCRM(result CRMResultData, applicationID uint) error {
 		return fmt.Errorf("ошибка создания запроса: %v", err)
 	}
 
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Service-Token", crmToken)
 	req.Header.Set("Accept", "application/json")
 
@@ -227,6 +310,6 @@ func sendResultsToCRM(result CRMResultData, applicationID uint) error {
 		return fmt.Errorf("CRM вернул ошибку %d: %v", resp.StatusCode, errorResponse)
 	}
 
-	fmt.Println("Результаты успешно отправлены в Django")
+	fmt.Println("Результаты успешно отправлены в CRM")
 	return nil
 }
