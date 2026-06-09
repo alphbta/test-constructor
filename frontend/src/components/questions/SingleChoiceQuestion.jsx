@@ -5,7 +5,7 @@ import DeleteIconSub from "../../assets/delete_sub.svg?react";
 import SingleChoiseIcon from "../../assets/SingleChoise.svg";
 import ScoreInput2 from "../details/ScoreInput2.jsx";
 
-function SingleChoiceQuestion({ question, updateQuestion, deleteQuestion , onAddQuestion}) {
+function SingleChoiceQuestion({ question, updateQuestion, deleteQuestion, onAddQuestion, onChangeType }) {
     const {
         attributes,
         listeners,
@@ -37,6 +37,10 @@ function SingleChoiceQuestion({ question, updateQuestion, deleteQuestion , onAdd
         updateQuestion(question.id, "options", newOptions);
     };
 
+    const handleChangeType = () => {
+        onChangeType?.(question.id);
+    };
+
     return (
         <div ref={setNodeRef} style={style} className="question-block single-choice">
             <div className = "">
@@ -48,7 +52,6 @@ function SingleChoiceQuestion({ question, updateQuestion, deleteQuestion , onAdd
                         </div>
                     </span>
 
-
                     <div className="q-icons">
                             <span onClick={() => deleteQuestion(question.id)}>
                                 <DeleteIcon style={{ width: '24px', height: '24px' }}/>
@@ -57,7 +60,7 @@ function SingleChoiceQuestion({ question, updateQuestion, deleteQuestion , onAdd
                 </div>
                 <div className="q-header1">
                     <span
-                        onClick={() => onAddQuestion?.(question.order)}
+                        onClick={handleChangeType}
                         style={{ cursor: "pointer" }}
                     >
                             <img

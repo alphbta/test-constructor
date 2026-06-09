@@ -4,7 +4,7 @@ import MultipleChoiceQuestion from "./questions/MultipleChoiceQuestion";
 import MatchingQuestion from "./questions/MatchingQuestion";
 import OrderingQuestion from "./questions/OrderingQuestion";
 
-function SortableQuestion({ question, updateQuestion, deleteQuestion, onAddQuestion }) {
+function SortableQuestion({ question, updateQuestion, deleteQuestion, onAddQuestion, onChangeType }) {
     switch (question.type) {
         case "shortText":
             return <ManualInputQuestion
@@ -12,6 +12,7 @@ function SortableQuestion({ question, updateQuestion, deleteQuestion, onAddQuest
                 updateQuestion={updateQuestion}
                 deleteQuestion={deleteQuestion}
                 onAddQuestion={onAddQuestion}
+                onChangeType={onChangeType}
             />;
         case "singleChoice":
             return <SingleChoiceQuestion
@@ -19,6 +20,7 @@ function SortableQuestion({ question, updateQuestion, deleteQuestion, onAddQuest
                 updateQuestion={updateQuestion}
                 deleteQuestion={deleteQuestion}
                 onAddQuestion={onAddQuestion}
+                onChangeType={onChangeType}
             />;
         case "multipleChoice":
             return <MultipleChoiceQuestion
@@ -26,6 +28,7 @@ function SortableQuestion({ question, updateQuestion, deleteQuestion, onAddQuest
                 updateQuestion={updateQuestion}
                 deleteQuestion={deleteQuestion}
                 onAddQuestion={onAddQuestion}
+                onChangeType={onChangeType}
             />;
         case "matching":
             return <MatchingQuestion
@@ -33,6 +36,7 @@ function SortableQuestion({ question, updateQuestion, deleteQuestion, onAddQuest
                 updateQuestion={updateQuestion}
                 deleteQuestion={deleteQuestion}
                 onAddQuestion={onAddQuestion}
+                onChangeType={onChangeType}
             />;
         case "ordering":
             return <OrderingQuestion
@@ -40,6 +44,7 @@ function SortableQuestion({ question, updateQuestion, deleteQuestion, onAddQuest
                 updateQuestion={updateQuestion}
                 deleteQuestion={deleteQuestion}
                 onAddQuestion={onAddQuestion}
+                onChangeType={onChangeType}
             />;
         default:
             return <div>Неизвестный тип вопроса</div>;

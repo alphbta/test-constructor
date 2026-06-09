@@ -2,11 +2,10 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import DeleteIcon from "../../assets/delete.svg?react";
 import DeleteIconSub from "../../assets/delete_sub.svg?react";
-
 import CorrectOrderIcon from "../../assets/CorrectOrder.svg";
 import ScoreInput2 from "../details/ScoreInput2.jsx";
 
-function OrderingQuestion({ question, updateQuestion, deleteQuestion , onAddQuestion}) {
+function OrderingQuestion({ question, updateQuestion, deleteQuestion, onAddQuestion, onChangeType }) {
     const {
         attributes,
         listeners,
@@ -38,6 +37,10 @@ function OrderingQuestion({ question, updateQuestion, deleteQuestion , onAddQues
         updateQuestion(question.id, "items", newItems);
     };
 
+    const handleChangeType = () => {
+        onChangeType?.(question.id);
+    };
+
     return (
         <div ref={setNodeRef} style={style} className="question-block ordering">
             <div className = "">
@@ -49,7 +52,6 @@ function OrderingQuestion({ question, updateQuestion, deleteQuestion , onAddQues
                         </div>
                     </span>
 
-
                     <div className="q-icons">
                             <span onClick={() => deleteQuestion(question.id)}>
                                 <DeleteIcon style={{ width: '24px', height: '24px' }}/>
@@ -58,7 +60,7 @@ function OrderingQuestion({ question, updateQuestion, deleteQuestion , onAddQues
                 </div>
                 <div className="q-header1">
                     <span
-                        onClick={() => onAddQuestion?.(question.order)}
+                        onClick={handleChangeType}
                         style={{ cursor: "pointer" }}
                     >
                             <img

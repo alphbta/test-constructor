@@ -17,6 +17,7 @@ import EventConfigPage from "./components/EventConfigPage";
 
 import StatisticsEvent from "./pages/StatisticsEvent";
 
+import StudentHome from "./pages/StudentHome.jsx";
 
 function App() {
     return (
@@ -53,6 +54,7 @@ function App() {
                     element={<StatisticsEvent />}
                 />
 
+                <Route path="/StudentHome" element={<StudentHome />} />
 
             </Routes>
         </BrowserRouter>

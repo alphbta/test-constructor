@@ -21,6 +21,11 @@ export default function Events() {
         { id: 3, name: "Мои мероприятие 3", start_date: "2000-01-01", end_date: "2050-01-01" },
         { id: 4, name: "Мои мероприятие 4", start_date: "2000-01-01", end_date: "2050-01-01" },
         { id: 5, name: "Мои мероприятие 5", start_date: "2000-01-01", end_date: "2050-01-01" },
+        { id: 1, name: "Мои мероприятие 1", start_date: "2000-01-01", end_date: "2050-01-01" },
+        { id: 2, name: "Мои мероприятие 2", start_date: "2000-01-01", end_date: "2050-01-01" },
+        { id: 3, name: "Мои мероприятие 3", start_date: "2000-01-01", end_date: "2050-01-01" },
+        { id: 4, name: "Мои мероприятие 4", start_date: "2000-01-01", end_date: "2050-01-01" },
+        { id: 5, name: "Мои мероприятие 5", start_date: "2000-01-01", end_date: "2050-01-01" },
     ];
 
     useEffect(() => {
