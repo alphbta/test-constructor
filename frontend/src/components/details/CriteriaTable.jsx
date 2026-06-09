@@ -12,7 +12,7 @@ export default function CriteriaTable({
                                           onDeleteTest,
                                           testsList = []
                                       }) {
-    // Функция для получения названия теста по ID
+
     const getTestTitle = (id) => {
         const test = testsList.find(t => t.id === id);
         return test ? test.title : `Тест №${id}`;
@@ -22,7 +22,7 @@ export default function CriteriaTable({
         <div className="criteria-table-block">
 
             <div className="criteria-table-header">
-                <div>Нижняя граница</div>
+                <div>Нижняя граница (балл)</div>
                 <div>Сообщение</div>
                 <div>Дополнительный тест</div>
                 <div></div>

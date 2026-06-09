@@ -19,7 +19,6 @@ export default function SpecializationSelect({ specializations, selected, onChan
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-
     const openAnimated = () => {
         if (!listRef.current) {
             setIsOpen(true);
@@ -45,7 +44,6 @@ export default function SpecializationSelect({ specializations, selected, onChan
         listRef.current.style.opacity = '0';
 
         setIsOpen(false);
-
 
         setTimeout(() => {
             if (listRef.current) {
@@ -120,6 +118,7 @@ export default function SpecializationSelect({ specializations, selected, onChan
                                 aria-selected={String(spec.id) === String(selected)}
                             >
                                 {spec.name}
+                                {spec.id === 0 && <span className="all-specs-badge"></span>}
                             </button>
                         ))
                     )}

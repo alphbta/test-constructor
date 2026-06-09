@@ -202,6 +202,11 @@ export default function CreateTest() {
     };
 
     const sensors = useAppSensors();
+    const addQuestionAfter = (currentOrder) => {
+        setInsertAfterOrder(currentOrder);
+        setShowQuestionMenu(true);
+    };
+    const [insertAfterOrder, setInsertAfterOrder] = useState(null);
 
     const addQuestion = (type) => {
         const baseQuestion = {
@@ -233,6 +238,7 @@ export default function CreateTest() {
         }
 
         setQuestions([...questions, baseQuestion]);
+        setInsertAfterOrder(null);
     };
 
     const updateQuestion = (id, field, value) => {
@@ -565,6 +571,7 @@ export default function CreateTest() {
                                     question={question}
                                     updateQuestion={updateQuestion}
                                     deleteQuestion={deleteQuestion}
+                                    onAddQuestion={addQuestionAfter}
                                 />
                             ))}
                         </SortableContext>
@@ -587,7 +594,7 @@ export default function CreateTest() {
                                 ? "Сохранить изменения"
                                 : "Создать тест"}
                         </button>
-                        <h3>Поля теста</h3>
+                        {/*<h3>Поля теста</h3>
                         <div className="right-section">
                             <button
                                 className="right-btn-toggle"
@@ -603,18 +610,48 @@ export default function CreateTest() {
                                     className="right-btn"
                                     onClick={() => {
                                         addQuestion(type.key);
+                                        setShowQuestionMenu(false);
                                     }}
                                 >
                                     {type.label}
                                 </button>
                             ))}
                         </div>
-                        {/* <TimeBox time={time} setTime={setTime} />
+                        <TimeBox time={time} setTime={setTime} />
         */}
                     </div>
                 </div>
 
             </div>
+            {showQuestionMenu && (
+                <div className="modal-overlay" onClick={() => setShowQuestionMenu(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>Выберите тип вопроса</h3>
+                            <button
+                                className="modal-close"
+                                onClick={() => setShowQuestionMenu(false)}
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <div className="modal-body">
+                            {questionTypes.map((type) => (
+                                <button
+                                    key={type.key}
+                                    className="modal-option"
+                                    onClick={() => {
+                                        addQuestion(type.key);
+                                        setShowQuestionMenu(false);
+                                    }}
+                                >
+                                    {type.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

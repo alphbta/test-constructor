@@ -28,7 +28,7 @@ type UserAttemptDetail struct {
 	TestTitle string             `json:"test_title"`
 	EventName string             `json:"event_name"`
 	IsExtra   bool               `json:"is_extra"`
-	Score     float64            `json:"score"`
+	Score     int                `json:"score"`
 	MaxScore  int                `json:"max_score"`
 	Passed    bool               `json:"passed"`
 	Questions []QuestionStatInfo `json:"questions"`

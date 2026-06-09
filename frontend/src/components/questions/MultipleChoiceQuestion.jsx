@@ -5,7 +5,7 @@ import DeleteIconSub from "../../assets/delete_sub.svg?react";
 import MultipIcon from "../../assets/MultipleСhoice.svg";
 import ScoreInput2 from "../details/ScoreInput2.jsx";
 
-function MultipleChoiceQuestion({ question, updateQuestion, deleteQuestion }) {
+function MultipleChoiceQuestion({ question, updateQuestion, deleteQuestion , onAddQuestion}) {
     const {
         attributes,
         listeners,
@@ -55,7 +55,10 @@ function MultipleChoiceQuestion({ question, updateQuestion, deleteQuestion }) {
                     </div>
                 </div>
                 <div className="q-header1">
-                     <span>
+                     <span
+                         onClick={() => onAddQuestion?.(question.order)}
+                         style={{ cursor: "pointer" }}
+                     >
                              <img
                                  src={MultipIcon}
                                  alt="multu"

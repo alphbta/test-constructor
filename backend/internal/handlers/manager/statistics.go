@@ -27,7 +27,7 @@ type UserAttemptInfo struct {
 	FirstName string             `json:"first_name"`
 	LastName  string             `json:"last_name"`
 	Email     string             `json:"email"`
-	Score     float64            `json:"score"`
+	Score     int                `json:"score"`
 	MaxScore  int                `json:"max_score"`
 	Passed    bool               `json:"passed"`
 	TimeSpent int                `json:"time_spent_minutes"`

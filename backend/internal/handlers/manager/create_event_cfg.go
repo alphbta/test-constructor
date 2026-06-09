@@ -19,15 +19,15 @@ type EventCfgInfo struct {
 	SuccessText      string               `json:"success_text"`
 	FailText         string               `json:"fail_text"`
 	TimeLimit        int                  `json:"time_limit"`
-	Threshold        float64              `json:"threshold"`
+	Threshold        int                  `json:"threshold"`
 	ExtraThreshold   []ExtraThresholdInfo `json:"extra_threshold"`
 }
 
 type ExtraThresholdInfo struct {
-	Threshold     float64 `json:"threshold"`
-	Message       string  `json:"message"`
-	TestID        uint    `json:"test_id"`
-	TestThreshold float64 `json:"test_threshold"`
+	Threshold     int    `json:"threshold"`
+	Message       string `json:"message"`
+	TestID        uint   `json:"test_id"`
+	TestThreshold int    `json:"test_threshold"`
 }
 
 // @Summary Создать настройку мероприятия

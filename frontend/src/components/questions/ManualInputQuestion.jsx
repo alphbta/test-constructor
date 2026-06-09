@@ -4,7 +4,7 @@ import DeleteIcon from "../../assets/delete.svg?react";
 import DeleteIconSub from "../../assets/delete_sub.svg?react";
 import ScoreInput from "../details/ScoreInput.jsx";
 import ManualIcon from "../../assets/Manual.svg";
-function ManualInputQuestion({ question, updateQuestion, deleteQuestion }) {
+function ManualInputQuestion({ question, updateQuestion, deleteQuestion , onAddQuestion }) {
     const {
         attributes,
         listeners,
@@ -13,7 +13,10 @@ function ManualInputQuestion({ question, updateQuestion, deleteQuestion }) {
         transition,
         isDragging,
     } = useSortable({ id: question.id });
-
+    const handleAddQuestion = () => {
+        console.log("Клик работает, order:", question.order);
+        onAddQuestion?.(question.order);
+    };
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
@@ -57,12 +60,15 @@ function ManualInputQuestion({ question, updateQuestion, deleteQuestion }) {
                     </div>
                 </div>
                 <div className="q-header1">
-                    <span>
-                            <img
-                                 src={ManualIcon}
-                                alt="manual"
-                                style={{ width: '36px', height: '36px' }}
-                            />
+                    <span
+                        onClick={handleAddQuestion}
+                        style={{ cursor: "pointer" }}
+                    >
+                    <img
+                        src={ManualIcon}
+                        alt="manual"
+                        style={{ width: '36px', height: '36px' }}
+                    />
                     </span>
                     Задание на ручной ввод
                 </div>

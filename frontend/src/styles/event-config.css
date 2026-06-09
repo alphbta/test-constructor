@@ -722,3 +722,53 @@ body {
 .event-config-test-item.active-red .test-title {
     color: white;
 }
+
+.time-checkbox {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.time-checkbox input {
+    display: none;
+}
+
+.time-checkbox .checkmark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #2F4156;
+    border-radius: 4px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.time-checkbox input:checked + .checkmark {
+    background: #2F4156;
+    color: #F0E8D5;
+}
+
+.time-checkbox input:checked + .checkmark::after {
+    content: '✓';
+    font-weight: bold;
+    font-size: 14px;
+    color: #F0E8D5;
+}
+
+.time-box-unlimited {
+    padding: 0;
+    background: #F0E8D5;
+    border-radius: 12px;
+    margin-top: 12px;
+    text-align: center;
+}
+
+.time-box-unlimited p {
+    margin: 0;
+    padding: 0;
+    font-size: 20px;
+    color: #2F4156;
+    font-weight: 600;
+}

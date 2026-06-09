@@ -13,12 +13,13 @@ import korzinaIcon from '../assets/korzina.svg';
 import massageIcon from '../assets/message.svg';
 
 const allSpecsMock = [
+    { id: 0, name: 'Все специализации' },
     { id: 1, name: 'Frontend' },
     { id: 2, name: 'Backend' },
 ];
 
 const DEFAULT_CONFIG = {
-    selectedSpec: '',
+    selectedSpec: '0',
     criteria: [
         { threshold: 50, message: 'Успешно пройден', extraTests: [] },
         { threshold: 30, message: 'Пройдите дополнительный тест', extraTests: [] },
@@ -26,6 +27,7 @@ const DEFAULT_CONFIG = {
     ],
     failMessage: '',
     time: { hours: 0, minutes: 0, seconds: 0 },
+    isTimeEnabled: false,
     shareLink: 'https://newforms-novaya-forma-konstruktion',
 };
 
@@ -39,8 +41,11 @@ export default function EventConfigPage() {
     const [modalTarget, setModalTarget] = useState(null);
     const [modalSelected, setModalSelected] = useState([]);
     const [specializations, setSpecializations] = useState(allSpecsMock);
-
     const [testConfigs, setTestConfigs] = useState({});
+
+
+    const searchParams = new URLSearchParams(window.location.search);
+    const eventId = searchParams.get('eventId');
 
     useEffect(() => {
         const fetchTests = async () => {
@@ -158,19 +163,27 @@ export default function EventConfigPage() {
         updateCurrentConfig('criteria', newCriteria);
     };
 
-    const handleRemoveSelected = (idToRemove) => {
-        const newSelected = selectedTestIds.filter(id => id !== idToRemove);
-        setSelectedTestIds(newSelected);
+    const handleRemoveSelected = async (idToRemove) => {
+        try {
 
-        if (selectedTestId === idToRemove) {
-            setSelectedTestId(newSelected.length > 0 ? newSelected[0] : null);
+            const newSelected = selectedTestIds.filter(id => id !== idToRemove);
+            setSelectedTestIds(newSelected);
+
+            if (selectedTestId === idToRemove) {
+                setSelectedTestId(newSelected.length > 0 ? newSelected[0] : null);
+            }
+
+            setTestConfigs(prev => {
+                const newConfigs = { ...prev };
+                delete newConfigs[idToRemove];
+                return newConfigs;
+            });
+
+            console.log(`Тест ${idToRemove} удален`);
+        } catch (err) {
+            console.error('Ошибка при удалении теста:', err);
+            alert('Не удалось удалить тест');
         }
-
-        setTestConfigs(prev => {
-            const newConfigs = { ...prev };
-            delete newConfigs[idToRemove];
-            return newConfigs;
-        });
     };
 
     const handleDeleteCriteria = (index) => {
@@ -193,6 +206,10 @@ export default function EventConfigPage() {
 
     const currentConfig = getCurrentConfig();
 
+    const getAvailableExtraTests = () => {
+        return tests.filter(test => selectedTestIds.includes(test.id));
+    };
+
     const handleSave = async () => {
         try {
             const userStr = localStorage.getItem('user');
@@ -204,16 +221,17 @@ export default function EventConfigPage() {
             }
 
             for (const testId of selectedTestIds) {
-                const config = testConfigs[testId];
-                if (!config) continue;
+                const config = testConfigs[testId] || { ...DEFAULT_CONFIG };
 
-                const timeInSeconds = (config.time?.hours || 0) * 3600 +
+                const timeInSeconds = config.isTimeEnabled
+                    ? (config.time?.hours || 0) * 3600 +
                     (config.time?.minutes || 0) * 60 +
-                    (config.time?.seconds || 0);
+                    (config.time?.seconds || 0)
+                    : 0;
 
                 const payload = {
                     event_id: parseInt(eventId) || 1,
-                    specialization_id: 1,
+                    specialization_id: parseInt(config.selectedSpec) || 0,
                     test_id: testId,
                     success_text: config.failMessage || 'Успешно пройден',
                     fail_text: config.failMessage || 'Не пройден',
@@ -244,6 +262,7 @@ export default function EventConfigPage() {
             alert('Ошибка при сохранении конфигурации');
         }
     };
+
     return (
         <div className="event-config-page">
             <div className="event-config-sidebar">
@@ -306,7 +325,7 @@ export default function EventConfigPage() {
                     onAddTest={idx => openModal(idx)}
                     onDelete={handleDeleteCriteria}
                     onDeleteTest={handleDeleteTest}
-                    testsList={tests}
+                    testsList={getAvailableExtraTests()}
                 />
                 <div className="fail-message-block">
                     <div className="fail-message-header">
@@ -323,6 +342,8 @@ export default function EventConfigPage() {
                 <TimeBox
                     time={currentConfig.time}
                     setTime={(newTime) => updateCurrentConfig('time', newTime)}
+                    isTimeEnabled={currentConfig.isTimeEnabled}
+                    setIsTimeEnabled={(isEnabled) => updateCurrentConfig('isTimeEnabled', isEnabled)}
                 />
                 <ShareLinkBox link={currentConfig.shareLink} />
                 <button className="save-btn" onClick={handleSave}>Сохранить</button>
@@ -330,7 +351,7 @@ export default function EventConfigPage() {
 
             <SelectTestsModal
                 open={modalOpen}
-                tests={tests}
+                tests={modalTarget === 'main' ? tests : getAvailableExtraTests()}
                 selected={modalSelected}
                 onSelect={id =>
                     setModalSelected(

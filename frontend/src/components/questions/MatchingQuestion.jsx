@@ -5,7 +5,7 @@ import DeleteIconSub from "../../assets/delete_sub.svg?react";
 import ScoreInput2 from "../details/ScoreInput2.jsx";
 import RatioIcon from "../../assets/Ratio.svg";
 
-function MatchingQuestion({ question, updateQuestion, deleteQuestion }) {
+function MatchingQuestion({ question, updateQuestion, deleteQuestion , onAddQuestion}) {
     const {
         attributes,
         listeners,
@@ -56,7 +56,10 @@ function MatchingQuestion({ question, updateQuestion, deleteQuestion }) {
                     </div>
                 </div>
                 <div className="q-header1">
-                     <span>
+                     <span
+                         onClick={() => onAddQuestion?.(question.order)}
+                         style={{ cursor: "pointer" }}
+                     >
                              <img
                                  src={RatioIcon}
                                  alt="Ratio"

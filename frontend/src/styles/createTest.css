@@ -126,7 +126,7 @@
 }
 
 .q-text-input {
-    width: 300px;
+    width: 700px;
     padding: 12px 15px;
     color: #2F4156;
     font-size: 20px;
@@ -1181,4 +1181,72 @@ input[type="checkbox"] {
 
 .toggle-arrow.open {
     transform: rotate(180deg);
+}
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #2F4156;
+    border-radius: 20px;
+    padding: 30px;
+    min-width: 400px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+}
+
+.modal-header h3 {
+    color: #F0E8D5;
+    margin: 0;
+    font-size: 20px;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: #F0E8D5;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 0;
+    margin-top: 5px;
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal-option {
+    padding: 12px 16px;
+    background: #4A607B;
+    border: none;
+    border-radius: 10px;
+    color: #F0E8D5;
+    cursor: pointer;
+    font-size: 16px;
+    text-align: left;
+    transition: all 0.2s;
+}
+
+.modal-option:hover {
+    background: #A9C4D6;
+    color: #2F4156;
+    transform: translateX(5px);
 }

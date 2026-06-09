@@ -17,6 +17,7 @@ import EventConfigPage from "./components/EventConfigPage";
 
 import StatisticsEvent from "./pages/StatisticsEvent";
 
+
 function App() {
     return (
         <BrowserRouter>
@@ -51,6 +52,7 @@ function App() {
                     path="/event-statistics/:eventId"
                     element={<StatisticsEvent />}
                 />
+
 
             </Routes>
         </BrowserRouter>
