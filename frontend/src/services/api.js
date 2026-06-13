@@ -72,4 +72,12 @@ export const testsAPI = {
         api.post('/api/intern/attempt/finish', attemptData),
 }
 
+export const internAPI = {
+    getUserEvents: () =>
+        api.get('/api/intern/users/events'),
+
+    createUserEvent: (eventData) =>
+        api.post('/api/intern/users/events', eventData),
+}
+
 export default api;

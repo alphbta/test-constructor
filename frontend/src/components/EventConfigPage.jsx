@@ -29,6 +29,7 @@ const DEFAULT_CONFIG = {
     time: { hours: 0, minutes: 0, seconds: 0 },
     isTimeEnabled: false,
     shareLink: 'https://newforms-novaya-forma-konstruktion',
+    isExtraTest: false,
 };
 
 export default function EventConfigPage() {
@@ -69,6 +70,7 @@ export default function EventConfigPage() {
                     id: test.test_id || test.id,
                     creator_id: test.creator_id ?? test.creatorId ?? test.CreatorID ?? test.creatorID,
                     title: test.title || test.name || test.description || `Тест ${test.test_id || test.id}`,
+                    max_score: test.max_score || test.maxScore || test.MaxScore || 100,
                 }));
 
                 const userStr = localStorage.getItem('user');
@@ -82,7 +84,7 @@ export default function EventConfigPage() {
             } catch (err) {
                 console.error('Ошибка загрузки тестов:', err);
                 setTests([]);
-            }
+            }const testMaxScore = getTestMaxScore(selectedTestId);
         };
 
         fetchTests();
@@ -205,6 +207,8 @@ export default function EventConfigPage() {
     };
 
     const currentConfig = getCurrentConfig();
+    const currentTest = tests.find(t => t.id === selectedTestId);
+    const testMaxScore = currentTest?.max_score || 100;
 
     const getAvailableExtraTests = () => {
         return tests.filter(test => selectedTestIds.includes(test.id));
@@ -212,6 +216,14 @@ export default function EventConfigPage() {
 
     const handleSave = async () => {
         try {
+            for (const testId of selectedTestIds) {
+                const config = testConfigs[testId] || { ...DEFAULT_CONFIG };
+                if (!config.criteria || config.criteria.length === 0) {
+                    alert(`Ошибка: для теста необходимо добавить хотя бы один критерий прохождения`);
+                    return;
+                }
+            }
+
             const userStr = localStorage.getItem('user');
             const currentUserId = userStr ? JSON.parse(userStr).id : null;
 
@@ -237,6 +249,7 @@ export default function EventConfigPage() {
                     fail_text: config.failMessage || 'Не пройден',
                     time_limit: timeInSeconds,
                     threshold: config.criteria[0]?.threshold || 50,
+                    is_extra: config.isExtraTest || false,
                     extra_threshold: config.criteria.slice(1).map(c => ({
                         threshold: c.threshold,
                         message: c.message,
@@ -312,11 +325,38 @@ export default function EventConfigPage() {
             </div>
 
             <div className="event-config-main">
+                {/* Флаг для дополнительного теста */}
+                <div className="extra-test-flag-block" style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                        <input
+                            type="checkbox"
+                            checked={currentConfig.isExtraTest}
+                            onChange={(e) => updateCurrentConfig('isExtraTest', e.target.checked)}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                        />
+                        <span style={{ color: '#F0E8D5', fontSize: '16px', fontWeight: '600' }}>
+                            Это дополнительный тест?
+                        </span>
+                    </label>
+                </div>
+
                 <SpecializationSelect
-                    specializations={specializations}
+                    specializations={
+                        currentConfig.isExtraTest
+                            ? allSpecsMock.filter(s => s.id !== 0)
+                            : allSpecsMock
+                    }
                     selected={currentConfig.selectedSpec}
-                    onChange={(spec) => updateCurrentConfig('selectedSpec', spec)}
+                    onChange={(spec) => {
+                        if (currentConfig.isExtraTest && spec === '0') {
+                            updateCurrentConfig('selectedSpec', '1');
+                        } else {
+                            updateCurrentConfig('selectedSpec', spec);
+                        }
+                    }}
+                    disabled={currentConfig.isExtraTest}
                 />
+
                 <div className="criteria-table-title">Критерий прохождения теста</div>
                 <CriteriaTable
                     criteria={currentConfig.criteria}
@@ -326,6 +366,7 @@ export default function EventConfigPage() {
                     onDelete={handleDeleteCriteria}
                     onDeleteTest={handleDeleteTest}
                     testsList={getAvailableExtraTests()}
+                    maxScore={testMaxScore}
                 />
                 <div className="fail-message-block">
                     <div className="fail-message-header">

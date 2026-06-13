@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-export default function SpecializationSelect({ specializations, selected, onChange }) {
+export default function SpecializationSelect({ specializations, selected, onChange, disabled = false }) {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef(null);
     const listRef = useRef(null);
@@ -53,6 +53,8 @@ export default function SpecializationSelect({ specializations, selected, onChan
     };
 
     const toggleOpen = () => {
+        if (disabled) return;
+
         if (isOpen) {
             closeInstant();
         } else {
@@ -85,8 +87,9 @@ export default function SpecializationSelect({ specializations, selected, onChan
 
     return (
         <div
-            className={`specialization-select ${isOpen ? 'open' : ''}`}
+            className={`specialization-select ${isOpen ? 'open' : ''} ${disabled ? 'disabled' : ''}`}
             ref={containerRef}
+            style={disabled ? { opacity: 0.5, pointerEvents: 'none' } : {}}
         >
             <button
                 type="button"
@@ -94,6 +97,8 @@ export default function SpecializationSelect({ specializations, selected, onChan
                 onClick={toggleOpen}
                 aria-expanded={isOpen}
                 aria-haspopup="listbox"
+                disabled={disabled}
+                title={disabled ? "Недоступно для дополнительных тестов" : ""}
             >
                 <span className="specialization-select-value">{selectedName}</span>
                 <div className="select-arrow" aria-hidden="true" />

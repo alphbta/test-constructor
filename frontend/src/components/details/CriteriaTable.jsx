@@ -10,7 +10,8 @@ export default function CriteriaTable({
                                           onAddTest,
                                           onDelete,
                                           onDeleteTest,
-                                          testsList = []
+                                          testsList = [],
+                                          maxScore = 100
                                       }) {
 
     const getTestTitle = (id) => {
@@ -38,17 +39,23 @@ export default function CriteriaTable({
                         <textarea
                             value={row.threshold}
                             onChange={e => {
-                                const onlyNumbers = e.target.value.replace(/\D/g, '');
+                                let value = e.target.value.replace(/\D/g, '');
+
+                                if (parseInt(value) > maxScore) {
+                                    value = String(maxScore);
+                                }
 
                                 e.target.style.height = 'auto';
                                 e.target.style.height = `${e.target.scrollHeight}px`;
 
                                 onChange(idx, {
                                     ...row,
-                                    threshold: onlyNumbers
+                                    threshold: value
                                 });
                             }}
                             className="criteria-threshold-input"
+                            placeholder="0"
+                            title={`Максимум: ${maxScore} баллов`}
                         />
                     </div>
 

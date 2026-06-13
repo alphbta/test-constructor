@@ -2,7 +2,7 @@ import "../styles/MyTestStudent.css";
 import LogoutButton from "../components/LogoutButton.jsx";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { testsAPI } from "../services/api.js";
+import { internAPI } from "../services/api.js";
 
 export default function StudentHome() {
     const navigate = useNavigate();
@@ -23,26 +23,14 @@ export default function StudentHome() {
                     return;
                 }
 
-                const mockApplications = [
-                    {
-                        event_id: 1,
-                        name: "Квалификация Frontend 2024",
-                        start_date: "2024-01-15",
-                        end_date: "2024-01-20"
-                    },
-                    {
-                        event_id: 2,
-                        name: "Квалификация Backend 2024",
-                        start_date: "2024-02-01",
-                        end_date: "2024-02-10"
-                    },
-                    {
-                        event_id: 3,
-                        name: "Квалификация QA 2024",
-                        start_date: "2024-02-15",
-                        end_date: "2024-02-25"
-                    }
-                ];
+                const response = await internAPI.getUserEvents();
+
+                const applicationsData = response.data.map(event => ({
+                    event_id: event.event_id,
+                    name: `Мероприятие ${event.event_id}`,
+                    start_date: "2024-01-15",
+                    end_date: "2024-01-20"
+                }));
 
                 const mockCompleted = [
                     {
@@ -71,7 +59,7 @@ export default function StudentHome() {
                     }
                 ];
 
-                setApplications(mockApplications);
+                setApplications(applicationsData);
                 setCompletedTests(mockCompleted);
             } catch (error) {
                 console.error("Ошибка при загрузке данных:", error);
@@ -117,7 +105,7 @@ export default function StudentHome() {
         );
     }
 
-    if (error) {
+    if (loading) {
         return (
             <div className="tests-page">
                 <div className="test-page" style={{ position: "absolute", left: "1430px", top: "0px" }}>
@@ -125,7 +113,7 @@ export default function StudentHome() {
                 </div>
                 <div className="create-wrapper2">
                     <div className="test">
-                        <p className="mytests-error">{error}</p>
+                        <p className="mytests-loading">Загрузка данных...</p>
                     </div>
                 </div>
             </div>
