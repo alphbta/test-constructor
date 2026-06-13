@@ -180,6 +180,113 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/intern/users/events": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Получение списка мероприятий, на которые записался текущий пользователь",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "intern"
+                ],
+                "summary": "Получить мероприятия пользователя",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/intern.UserEventGetInfo"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Создание связи между пользователем и мероприятием",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "intern"
+                ],
+                "summary": "Записаться на мероприятие",
+                "parameters": [
+                    {
+                        "description": "Event data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/intern.UserEventCreateInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/manager/events": {
             "get": {
                 "security": [
@@ -1048,6 +1155,31 @@ const docTemplate = `{
                 }
             }
         },
+        "intern.UserEventCreateInfo": {
+            "type": "object",
+            "properties": {
+                "application_id": {
+                    "type": "integer"
+                },
+                "event_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "intern.UserEventGetInfo": {
+            "type": "object",
+            "properties": {
+                "application_id": {
+                    "type": "integer"
+                },
+                "event_id": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "manager.CreateQuestionInfo": {
             "type": "object",
             "properties": {
@@ -1133,7 +1265,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "threshold": {
-                    "type": "number"
+                    "type": "integer"
                 },
                 "time_limit": {
                     "type": "integer"
@@ -1161,10 +1293,10 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "test_threshold": {
-                    "type": "number"
+                    "type": "integer"
                 },
                 "threshold": {
-                    "type": "number"
+                    "type": "integer"
                 }
             }
         },
@@ -1277,7 +1409,7 @@ const docTemplate = `{
                     }
                 },
                 "score": {
-                    "type": "number"
+                    "type": "integer"
                 },
                 "test_title": {
                     "type": "string"
@@ -1312,7 +1444,7 @@ const docTemplate = `{
                     }
                 },
                 "score": {
-                    "type": "number"
+                    "type": "integer"
                 },
                 "time_spent_minutes": {
                     "type": "integer"

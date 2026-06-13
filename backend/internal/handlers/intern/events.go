@@ -17,6 +17,12 @@ type UserEventCreateInfo struct {
 	ApplicationID uint `json:"application_id"`
 }
 
+type UserEventGetInfo struct {
+	EventID       uint `json:"event_id"`
+	UserID        uint `json:"user_id"`
+	ApplicationID uint `json:"application_id"`
+}
+
 // @Summary Записаться на мероприятие
 // @Security ApiKeyAuth
 // @Description Создание связи между пользователем и мероприятием
@@ -24,7 +30,7 @@ type UserEventCreateInfo struct {
 // @Accept json
 // @Produce json
 // @Param body body UserEventCreateInfo true "Event data"
-// @Success 201 {object}
+// @Success 201
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 409 {object} map[string]string
@@ -90,7 +96,7 @@ func CreateUserEvent(w http.ResponseWriter, r *http.Request) {
 // @Description Получение списка мероприятий, на которые записался текущий пользователь
 // @Tags intern
 // @Produce json
-// @Success 200 {array} models.UserEvent
+// @Success 200 {array} UserEventGetInfo
 // @Failure 401 {object} map[string]string
 // @Router /api/intern/users/events [get]
 func GetUserEvents(w http.ResponseWriter, r *http.Request) {
@@ -108,6 +114,15 @@ func GetUserEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var userEventsInfo []UserEventGetInfo
+	for _, userEvent := range userEvents {
+		userEventsInfo = append(userEventsInfo, UserEventGetInfo{
+			EventID:       userEvent.EventID,
+			UserID:        userEvent.UserID,
+			ApplicationID: userEvent.ApplicationID,
+		})
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(userEvents)
+	json.NewEncoder(w).Encode(userEventsInfo)
 }

@@ -231,6 +231,22 @@ definitions:
       question_id:
         type: integer
     type: object
+  intern.UserEventCreateInfo:
+    properties:
+      application_id:
+        type: integer
+      event_id:
+        type: integer
+    type: object
+  intern.UserEventGetInfo:
+    properties:
+      application_id:
+        type: integer
+      event_id:
+        type: integer
+      user_id:
+        type: integer
+    type: object
   manager.CreateQuestionInfo:
     properties:
       options:
@@ -287,7 +303,7 @@ definitions:
       test_id:
         type: integer
       threshold:
-        type: number
+        type: integer
       time_limit:
         type: integer
     type: object
@@ -305,9 +321,9 @@ definitions:
       test_id:
         type: integer
       test_threshold:
-        type: number
+        type: integer
       threshold:
-        type: number
+        type: integer
     type: object
   manager.GetUsersResponse:
     properties:
@@ -380,7 +396,7 @@ definitions:
           $ref: '#/definitions/manager.QuestionStatInfo'
         type: array
       score:
-        type: number
+        type: integer
       test_title:
         type: string
     type: object
@@ -403,7 +419,7 @@ definitions:
           $ref: '#/definitions/manager.QuestionStatInfo'
         type: array
       score:
-        type: number
+        type: integer
       time_spent_minutes:
         type: integer
       user_id:
@@ -597,6 +613,74 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Получить список тестов для прохождения
+      tags:
+      - intern
+  /api/intern/users/events:
+    get:
+      description: Получение списка мероприятий, на которые записался текущий пользователь
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/intern.UserEventGetInfo'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Получить мероприятия пользователя
+      tags:
+      - intern
+    post:
+      consumes:
+      - application/json
+      description: Создание связи между пользователем и мероприятием
+      parameters:
+      - description: Event data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/intern.UserEventCreateInfo'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Записаться на мероприятие
       tags:
       - intern
   /api/manager/events:
