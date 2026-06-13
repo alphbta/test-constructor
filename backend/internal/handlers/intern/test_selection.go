@@ -49,20 +49,18 @@ func GetTestSelection(w http.ResponseWriter, r *http.Request) {
 	}
 
 	eventIDStr := r.URL.Query().Get("event_id")
-	specIDStr := r.URL.Query().Get("specialization_id")
 
-	if eventIDStr == "" || specIDStr == "" {
-		http.Error(w, "event_id и specialization_id обязательны", http.StatusBadRequest)
+	if eventIDStr == "" {
+		http.Error(w, "event_id обязателен", http.StatusBadRequest)
 		return
 	}
 
 	eventID, _ := strconv.ParseUint(eventIDStr, 10, 32)
-	specID, _ := strconv.ParseUint(specIDStr, 10, 32)
 
 	var configs []models.EventConfig
 	if err := database.DB.Preload("Test").
 		Preload("ExtraThreshold").
-		Where("event_id = ? AND specialization_id = ?", uint(eventID), uint(specID)).
+		Where("event_id = ?", uint(eventID)).
 		Find(&configs).Error; err != nil {
 		http.Error(w, "Ошибка получения конфигураций", http.StatusInternalServerError)
 		return
@@ -140,10 +138,9 @@ func GetTestSelection(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := TestSelectionResponse{
-		EventID:          uint(eventID),
-		SpecializationID: uint(specID),
-		Tests:            tests,
-		AllCompleted:     allCompleted,
+		EventID:      uint(eventID),
+		Tests:        tests,
+		AllCompleted: allCompleted,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -165,10 +162,5 @@ func hasAccessToExtraConfig(userID uint, configID uint) bool {
 		return false
 	}
 
-	percentage := 0.0
-	if attempt.MaxScore > 0 {
-		percentage = float64(attempt.Score) / float64(attempt.MaxScore) * 100
-	}
-
-	return percentage >= float64(extraThreshold.Threshold)
+	return attempt.Score >= extraThreshold.Threshold
 }

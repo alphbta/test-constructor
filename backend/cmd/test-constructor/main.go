@@ -58,6 +58,8 @@ func main() {
 	i.HandleFunc("/tests/{link}", intern.StartAttempt).Methods("GET")
 	i.HandleFunc("/attempt/finish", intern.FinishAttempt).Methods("POST")
 	i.HandleFunc("/tests/selection", intern.GetTestSelection).Methods("GET")
+	i.HandleFunc("/users/events", intern.CreateUserEvent).Methods("POST")
+	i.HandleFunc("/users/events", intern.GetUserEvents).Methods("GET")
 
 	a := api.PathPrefix("/admin").Subrouter()
 	a.Use(middleware.AdminMiddleware)

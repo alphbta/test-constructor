@@ -149,12 +149,7 @@ func FinishAttempt(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	percentage := 0.0
-	if maxPoints > 0 {
-		percentage = float64(userPoints) / float64(maxPoints) * 100
-	}
-
-	passed := percentage >= float64(attempt.EventConfig.Threshold)
+	passed := userPoints >= attempt.EventConfig.Threshold
 
 	now := time.Now()
 	attempt.EndTime = &now
