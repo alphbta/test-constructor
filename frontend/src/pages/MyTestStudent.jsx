@@ -207,52 +207,7 @@ export default function MyTestStudent() {
                         </div>
                     )}
 
-                    {/* РАЗДЕЛИТЕЛЬ */}
-                    {completedTests.length > 0 && availableTests.length > 0 && (
-                        <div className="mytests-separator">
-                            <div className="separator-line"></div>
-                            <span className="separator-text">Пройденные тесты</span>
-                            <div className="separator-line"></div>
-                        </div>
-                    )}
 
-                    {/* ПРОЙДЕННЫЕ ТЕСТЫ */}
-                    {completedTests.length > 0 && (
-                        <div className="mytests-completed">
-                            <h3 className="mytests-completed-title">Пройденные тесты</h3>
-                            <div className="mytests-list-completed">
-                                {completedTests.map((test, index) => {
-                                    const statusBadge = getStatusBadge(test);
-                                    return (
-                                        <div key={`completed-${test.attempt_id || index}`} className="mytests-card-completed">
-                                            <div className="mytests-completed-info">
-                                                <h4 className="mytests-completed-title-card">
-                                                    {test.title || test.test_title || "Название теста"}
-                                                </h4>
-                                                <span className={`mytests-status-badge ${statusBadge.class}`}>
-                                                    {statusBadge.text}
-                                                </span>
-                                            </div>
-                                            <div className="mytests-completed-stats">
-                                                {test.score !== undefined && test.max_score !== undefined && (
-                                                    <div className="stat-item">
-                                                        <span className="stat-label">Баллы:</span>
-                                                        <span className="stat-value">{test.score}/{test.max_score}</span>
-                                                    </div>
-                                                )}
-                                                {test.result_text && (
-                                                    <div className="stat-item">
-                                                        <span className="stat-label">Результат:</span>
-                                                        <span className="stat-value">{test.result_text}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
 
                     {availableTests.length === 0 && completedTests.length === 0 && (
                         <p className="mytests-empty">

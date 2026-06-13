@@ -23,14 +23,27 @@ export default function StudentHome() {
                     return;
                 }
 
-                const response = await internAPI.getUserEvents();
-
-                const applicationsData = response.data.map(event => ({
-                    event_id: event.event_id,
-                    name: `Мероприятие ${event.event_id}`,
-                    start_date: "2024-01-15",
-                    end_date: "2024-01-20"
-                }));
+                // ПУСТЫШКИ ДЛЯ ЗАЯВОК
+                const mockApplications = [
+                    {
+                        event_id: 1,
+                        name: "Frontend-разработка с нуля",
+                        start_date: "2024-12-01",
+                        end_date: "2024-12-15"
+                    },
+                    {
+                        event_id: 2,
+                        name: "Backend на Python",
+                        start_date: "2024-12-10",
+                        end_date: "2024-12-25"
+                    },
+                    {
+                        event_id: 3,
+                        name: "UI/UX дизайн",
+                        start_date: "2025-01-05",
+                        end_date: "2025-01-20"
+                    }
+                ];
 
                 const mockCompleted = [
                     {
@@ -59,7 +72,7 @@ export default function StudentHome() {
                     }
                 ];
 
-                setApplications(applicationsData);
+                setApplications(mockApplications);
                 setCompletedTests(mockCompleted);
             } catch (error) {
                 console.error("Ошибка при загрузке данных:", error);
@@ -105,21 +118,6 @@ export default function StudentHome() {
         );
     }
 
-    if (loading) {
-        return (
-            <div className="tests-page">
-                <div className="test-page" style={{ position: "absolute", left: "1430px", top: "0px" }}>
-                    <LogoutButton />
-                </div>
-                <div className="create-wrapper2">
-                    <div className="test">
-                        <p className="mytests-loading">Загрузка данных...</p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="tests-page">
             <div className="test-page" style={{ position: "absolute", left: "1430px", top: "0px" }}>
@@ -143,38 +141,31 @@ export default function StudentHome() {
                         </button>
                     </div>
 
-
                     {activeTab === "applications" && (
                         <div>
-                            {applications.length === 0 ? (
-                                <p className="mytests-empty">
-                                    У вас нет заявок на мероприятия.
-                                </p>
-                            ) : (
-                                <div className="mytests-list">
-                                    {applications.map((app) => (
-                                        <div key={app.event_id} className="mytests-card">
-                                            <div className="mytests-card-header">
-                                                <div>
-                                                    <h4 style={{ margin: '0 0 8px 0', color: '#2F4156', fontSize: '16px', fontWeight: '600' }}>
-                                                        {app.name}
-                                                    </h4>
-                                                    <p style={{ margin: '0', color: '#2F4156', fontSize: '13px', opacity: '0.8' }}>
-                                                        {formatDate(app.start_date)} | {formatDate(app.end_date)}
-                                                    </p>
-                                                </div>
-                                                <button
-                                                    className="mytests-start-btn"
-                                                    onClick={() => handleGoToEvent(app.event_id)}
-                                                    style={{ whiteSpace: 'nowrap', marginLeft: '16px' }}
-                                                >
-                                                    Перейти
-                                                </button>
+                            <div className="mytests-list">
+                                {applications.map((app) => (
+                                    <div key={app.event_id} className="mytests-card">
+                                        <div className="mytests-card-header">
+                                            <div>
+                                                <h4 style={{ margin: '0 0 8px 0', color: '#2F4156', fontSize: '16px', fontWeight: '600' }}>
+                                                    {app.name}
+                                                </h4>
+                                                <p style={{ margin: '0', color: '#2F4156', fontSize: '13px', opacity: '0.8' }}>
+                                                    {formatDate(app.start_date)} | {formatDate(app.end_date)}
+                                                </p>
                                             </div>
+                                            <button
+                                                className="mytests-start-btn"
+                                                onClick={() => handleGoToEvent(app.event_id)}
+                                                style={{ whiteSpace: 'nowrap', marginLeft: '16px' }}
+                                            >
+                                                Перейти
+                                            </button>
                                         </div>
-                                    ))}
-                                </div>
-                            )}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
 
