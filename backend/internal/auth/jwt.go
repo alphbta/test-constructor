@@ -16,9 +16,20 @@ type JWTClaims struct {
 	jwt.RegisteredClaims
 }
 
-func GenerateJWT(userID uint, email, name, surname string, role string) (string, error) {
-	cfg := config.Load()
+type JWTService interface {
+	GenerateToken(userID uint, email, name, surname, role string) (string, error)
+	ValidateToken(tokenString string) (*JWTClaims, error)
+}
 
+type jwtService struct {
+	config *config.Config
+}
+
+func NewJWTService(cfg *config.Config) JWTService {
+	return &jwtService{config: cfg}
+}
+
+func (s *jwtService) GenerateToken(userID uint, email, name, surname, role string) (string, error) {
 	claims := &JWTClaims{
 		UserID:  userID,
 		Email:   email,
@@ -26,7 +37,7 @@ func GenerateJWT(userID uint, email, name, surname string, role string) (string,
 		Surname: surname,
 		Role:    role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(cfg.JWTTTL))),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(s.config.JWTTTL))),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
 			Issuer:    "test-constructor",
@@ -34,14 +45,12 @@ func GenerateJWT(userID uint, email, name, surname string, role string) (string,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(cfg.JWTSecret))
+	return token.SignedString([]byte(s.config.JWTSecret))
 }
 
-func ValidateJWT(tokenString string) (*JWTClaims, error) {
-	cfg := config.Load()
-
+func (s *jwtService) ValidateToken(tokenString string) (*JWTClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(cfg.JWTSecret), nil
+		return []byte(s.config.JWTSecret), nil
 	})
 
 	if err != nil {

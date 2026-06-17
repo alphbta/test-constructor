@@ -1,298 +1,54 @@
 basePath: /
 definitions:
-  admin.CreateManagerRequest:
+  domain.ChoiceOption:
     properties:
-      email:
-        type: string
-      name:
-        type: string
-      password:
-        type: string
-      surname:
-        type: string
-    type: object
-  admin.CreateManagerResponse:
-    properties:
-      email:
-        type: string
-      message:
-        type: string
-      name:
-        type: string
-      role:
-        type: string
-      surname:
-        type: string
-      user_id:
-        type: integer
-    type: object
-  auth.LoginRequest:
-    properties:
-      email:
-        type: string
-      password:
-        type: string
-    type: object
-  auth.LoginResponse:
-    properties:
-      email:
-        type: string
-      message:
-        type: string
-      name:
-        type: string
-      role:
-        type: string
-      surname:
-        type: string
-      token:
-        type: string
-      user_id:
-        type: integer
-    type: object
-  auth.RegisterRequest:
-    properties:
-      email:
-        type: string
-      name:
-        type: string
-      password:
-        type: string
-      surname:
-        type: string
-    type: object
-  auth.RegisterResponse:
-    properties:
-      email:
-        type: string
-      message:
-        type: string
-      name:
-        type: string
-      role:
-        type: string
-      surname:
-        type: string
-      token:
-        type: string
-      user_id:
-        type: integer
-    type: object
-  intern.FinishAttemptRequest:
-    properties:
-      userAnswers:
-        items:
-          $ref: '#/definitions/intern.UserAnswerInfo'
-        type: array
-    type: object
-  intern.FinishAttemptResponse:
-    properties:
-      all_completed:
-        description: Все ли тесты мероприятия пройдены
+      is_true:
         type: boolean
-      max_test_points:
-        type: integer
-      passed:
-        type: boolean
-      result:
+      text:
         type: string
-      score:
-        type: integer
     type: object
-  intern.PublicMatching:
+  domain.MatchingPair:
     properties:
       left:
-        items:
-          type: string
-        type: array
+        type: string
       right:
-        items:
-          type: string
-        type: array
+        type: string
     type: object
-  intern.PublicOptions:
+  domain.QuestionOptions:
     properties:
       case_sensitive:
         type: boolean
       choice:
         items:
-          type: string
+          $ref: '#/definitions/domain.ChoiceOption'
         type: array
-      matching:
-        $ref: '#/definitions/intern.PublicMatching'
-      sequence:
+      correct_input:
         items:
           type: string
         type: array
-    type: object
-  intern.QuestionInfo:
-    properties:
-      options:
-        $ref: '#/definitions/intern.PublicOptions'
-      order_number:
-        type: integer
-      points:
-        type: integer
-      question_id:
-        type: integer
-      text:
-        type: string
-      type:
-        $ref: '#/definitions/models.QType'
-    type: object
-  intern.StartAttemptRequest:
-    properties:
-      application_id:
-        type: integer
-    type: object
-  intern.StartAttemptResponse:
-    properties:
-      application_id:
-        type: integer
-      config_id:
-        type: integer
-      description:
-        type: string
-      questions:
-        items:
-          $ref: '#/definitions/intern.QuestionInfo'
-        type: array
-      test_id:
-        type: integer
-      threshold:
-        type: integer
-      time_limit:
-        type: integer
-      title:
-        type: string
-    type: object
-  intern.TestInfo:
-    properties:
-      attempt_id:
-        type: integer
-      config_id:
-        type: integer
-      description:
-        type: string
-      is_extra:
-        type: boolean
-      max_score:
-        type: integer
-      passed:
-        type: boolean
-      score:
-        type: integer
-      status:
-        description: '"available", "locked", "in_progress", "completed"'
-        type: string
-      test_id:
-        type: integer
-      test_link:
-        type: string
-      time_limit:
-        type: integer
-      title:
-        type: string
-    type: object
-  intern.TestSelectionResponse:
-    properties:
-      all_completed:
-        type: boolean
-      event_id:
-        type: integer
-      specialization_id:
-        type: integer
-      tests:
-        items:
-          $ref: '#/definitions/intern.TestInfo'
-        type: array
-    type: object
-  intern.UserAnswer:
-    properties:
-      choices:
-        items:
-          type: boolean
-        type: array
       matching:
         items:
-          $ref: '#/definitions/models.MatchingPair'
+          $ref: '#/definitions/domain.MatchingPair'
         type: array
       sequence:
         items:
-          $ref: '#/definitions/models.SequenceItem'
+          $ref: '#/definitions/domain.SequenceItem'
         type: array
-      user_input:
-        type: string
     type: object
-  intern.UserAnswerInfo:
+  domain.SequenceItem:
     properties:
-      answer:
-        $ref: '#/definitions/intern.UserAnswer'
-      question_id:
-        type: integer
-    type: object
-  intern.UserEventCreateInfo:
-    properties:
-      application_id:
-        type: integer
-      event_id:
-        type: integer
-    type: object
-  intern.UserEventGetInfo:
-    properties:
-      application_id:
-        type: integer
-      event_id:
-        type: integer
-      user_id:
-        type: integer
-    type: object
-  manager.CreateQuestionInfo:
-    properties:
-      options:
-        $ref: '#/definitions/models.QuestionOptions'
-      order_number:
-        type: integer
-      points:
+      order:
         type: integer
       text:
         type: string
-      type:
-        type: string
     type: object
-  manager.CreateTestInfo:
-    properties:
-      description:
-        type: string
-      is_extra:
-        type: boolean
-      questions:
-        items:
-          $ref: '#/definitions/manager.CreateQuestionInfo'
-        type: array
-      title:
-        type: string
-    type: object
-  manager.Event:
-    properties:
-      end_date:
-        type: string
-      name:
-        type: string
-      specializations:
-        items:
-          $ref: '#/definitions/manager.Specialization'
-        type: array
-      start_date:
-        type: string
-    type: object
-  manager.EventCfgInfo:
+  dto.CreateEventConfigRequest:
     properties:
       event_id:
         type: integer
       extra_threshold:
         items:
-          $ref: '#/definitions/manager.ExtraThresholdInfo'
+          $ref: '#/definitions/dto.ExtraThresholdRequest'
         type: array
       fail_text:
         type: string
@@ -307,14 +63,141 @@ definitions:
       time_limit:
         type: integer
     type: object
-  manager.EventSpecializationsResponse:
+  dto.CreateEventConfigResponse:
     properties:
+      config_id:
+        type: integer
+      message:
+        type: string
+    type: object
+  dto.CreateQuestionRequest:
+    properties:
+      options:
+        $ref: '#/definitions/domain.QuestionOptions'
+      order_number:
+        type: integer
+      points:
+        type: integer
+      text:
+        type: string
+      type:
+        type: string
+    type: object
+  dto.CreateTestRequest:
+    properties:
+      description:
+        type: string
+      questions:
+        items:
+          $ref: '#/definitions/dto.CreateQuestionRequest'
+        type: array
+      title:
+        type: string
+    type: object
+  dto.CreateTestResponse:
+    properties:
+      id:
+        type: integer
+      message:
+        type: string
+    type: object
+  dto.CreateUserEventRequest:
+    properties:
+      application_id:
+        type: integer
+      event_id:
+        type: integer
+      specialization_id:
+        type: integer
+    type: object
+  dto.CreateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      surname:
+        type: string
+    type: object
+  dto.CreateUserResponse:
+    properties:
+      email:
+        type: string
+      message:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+      surname:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  dto.DeleteTestResponse:
+    properties:
+      message:
+        example: Тест удален
+        type: string
+    type: object
+  dto.ErrorResponse:
+    properties:
+      error:
+        type: string
+      message:
+        type: string
+    type: object
+  dto.EventResponse:
+    properties:
+      end_date:
+        example: "2024-12-02T00:00:00Z"
+        type: string
+      name:
+        example: Хакатон 2024
+        type: string
       specializations:
         items:
-          $ref: '#/definitions/manager.Specialization'
+          $ref: '#/definitions/dto.EventSpecializationResponse'
+        type: array
+      start_date:
+        example: "2024-12-01T00:00:00Z"
+        type: string
+      total_tests:
+        example: 5
+        type: integer
+    type: object
+  dto.EventSpecializationResponse:
+    properties:
+      id:
+        example: 1
+        type: integer
+      name:
+        example: Frontend Developer
+        type: string
+    type: object
+  dto.EventSpecializationsListResponse:
+    properties:
+      event_id:
+        example: 1
+        type: integer
+      specializations:
+        items:
+          $ref: '#/definitions/dto.EventSpecializationResponse'
         type: array
     type: object
-  manager.ExtraThresholdInfo:
+  dto.EventsListResponse:
+    properties:
+      events:
+        items:
+          $ref: '#/definitions/dto.EventResponse'
+        type: array
+      total:
+        example: 10
+        type: integer
+    type: object
+  dto.ExtraThresholdRequest:
     properties:
       message:
         type: string
@@ -325,14 +208,121 @@ definitions:
       threshold:
         type: integer
     type: object
-  manager.GetUsersResponse:
+  dto.FinishAttemptRequest:
+    properties:
+      user_answers:
+        items:
+          $ref: '#/definitions/dto.UserAnswerInfo'
+        type: array
+    type: object
+  dto.FinishAttemptResponse:
+    properties:
+      all_completed:
+        type: boolean
+      max_test_points:
+        type: integer
+      passed:
+        type: boolean
+      result:
+        type: string
+      score:
+        type: integer
+    type: object
+  dto.GetUsersResponse:
     properties:
       users:
         items:
-          $ref: '#/definitions/manager.UserInfo'
+          $ref: '#/definitions/dto.UserInfo'
         type: array
     type: object
-  manager.QuestionStatInfo:
+  dto.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  dto.LoginResponse:
+    properties:
+      email:
+        type: string
+      message:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+      surname:
+        type: string
+      token:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  dto.MatchingPair:
+    properties:
+      left:
+        type: string
+      right:
+        type: string
+    type: object
+  dto.PublicMatching:
+    properties:
+      left:
+        items:
+          type: string
+        type: array
+      right:
+        items:
+          type: string
+        type: array
+    type: object
+  dto.PublicOptions:
+    properties:
+      case_sensitive:
+        type: boolean
+      choices:
+        items:
+          type: string
+        type: array
+      matching:
+        $ref: '#/definitions/dto.PublicMatching'
+      sequence:
+        items:
+          type: string
+        type: array
+    type: object
+  dto.QuestionPublic:
+    properties:
+      options:
+        $ref: '#/definitions/dto.PublicOptions'
+      order_number:
+        type: integer
+      points:
+        type: integer
+      question_id:
+        type: integer
+      text:
+        type: string
+      type:
+        type: string
+    type: object
+  dto.QuestionResponse:
+    properties:
+      id:
+        type: integer
+      options:
+        $ref: '#/definitions/domain.QuestionOptions'
+      order_number:
+        type: integer
+      points:
+        type: integer
+      text:
+        type: string
+      type:
+        type: string
+    type: object
+  dto.QuestionStatInfo:
     properties:
       is_correct:
         type: boolean
@@ -341,30 +331,137 @@ definitions:
       order_number:
         type: integer
       points_earned:
-        type: number
+        type: integer
       question_type:
         type: string
       text:
         type: string
     type: object
-  manager.Specialization:
+  dto.RegisterRequest:
     properties:
-      id:
-        type: integer
+      email:
+        type: string
       name:
         type: string
+      password:
+        type: string
+      surname:
+        type: string
     type: object
-  manager.StatisticsResponse:
+  dto.RegisterResponse:
+    properties:
+      email:
+        type: string
+      message:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+      surname:
+        type: string
+      token:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  dto.SequenceItem:
+    properties:
+      order:
+        type: integer
+      text:
+        type: string
+    type: object
+  dto.StartAttemptRequest:
+    properties:
+      application_id:
+        type: integer
+    type: object
+  dto.StartAttemptResponse:
+    properties:
+      attempt_id:
+        type: integer
+      config_id:
+        type: integer
+      description:
+        type: string
+      questions:
+        items:
+          $ref: '#/definitions/dto.QuestionPublic'
+        type: array
+      test_id:
+        type: integer
+      threshold:
+        type: integer
+      time_limit:
+        type: integer
+      title:
+        type: string
+    type: object
+  dto.StatisticsResponse:
     properties:
       attempts:
         items:
-          $ref: '#/definitions/manager.UserAttemptInfo'
+          $ref: '#/definitions/dto.UserAttemptInfo'
         type: array
     type: object
-  manager.TestInfo:
+  dto.TestDetailResponse:
     properties:
       creator_id:
         type: integer
+      creator_name:
+        type: string
+      description:
+        type: string
+      questions:
+        items:
+          $ref: '#/definitions/dto.QuestionResponse'
+        type: array
+      test_id:
+        type: integer
+      title:
+        type: string
+    type: object
+  dto.TestInfo:
+    properties:
+      attempt_id:
+        type: integer
+      config_id:
+        type: integer
+      description:
+        type: string
+      is_common:
+        type: boolean
+      is_extra:
+        type: boolean
+      max_score:
+        type: integer
+      passed:
+        type: boolean
+      replaced_test_id:
+        type: integer
+      replaced_title:
+        type: string
+      score:
+        type: integer
+      status:
+        description: available, locked, in_progress, completed
+        type: string
+      test_id:
+        type: integer
+      test_link:
+        type: string
+      time_limit:
+        type: integer
+      title:
+        type: string
+    type: object
+  dto.TestResponse:
+    properties:
+      creator_id:
+        type: integer
+      creator_name:
+        type: string
       description:
         type: string
       test_id:
@@ -372,14 +469,81 @@ definitions:
       title:
         type: string
     type: object
-  manager.TestsInfoResponse:
+  dto.TestSelectionResponse:
+    properties:
+      all_completed:
+        type: boolean
+      event_id:
+        type: integer
+      event_passed:
+        type: boolean
+      specialization_id:
+        type: integer
+      tests:
+        items:
+          $ref: '#/definitions/dto.TestInfo'
+        type: array
+    type: object
+  dto.TestsListResponse:
     properties:
       tests:
         items:
-          $ref: '#/definitions/manager.TestInfo'
+          $ref: '#/definitions/dto.TestResponse'
         type: array
     type: object
-  manager.UserAttemptDetail:
+  dto.UpdateEventConfigRequest:
+    properties:
+      event_id:
+        type: integer
+      extra_threshold:
+        items:
+          $ref: '#/definitions/dto.ExtraThresholdRequest'
+        type: array
+      fail_text:
+        type: string
+      specialization_id:
+        type: integer
+      success_text:
+        type: string
+      test_id:
+        type: integer
+      threshold:
+        type: integer
+      time_limit:
+        type: integer
+    type: object
+  dto.UpdateEventConfigResponse:
+    properties:
+      config_id:
+        type: integer
+      message:
+        type: string
+    type: object
+  dto.UserAnswer:
+    properties:
+      choices:
+        items:
+          type: boolean
+        type: array
+      matching:
+        items:
+          $ref: '#/definitions/dto.MatchingPair'
+        type: array
+      sequence:
+        items:
+          $ref: '#/definitions/dto.SequenceItem'
+        type: array
+      user_input:
+        type: string
+    type: object
+  dto.UserAnswerInfo:
+    properties:
+      answer:
+        $ref: '#/definitions/dto.UserAnswer'
+      question_id:
+        type: integer
+    type: object
+  dto.UserAttemptDetail:
     properties:
       attempt_id:
         type: integer
@@ -393,14 +557,14 @@ definitions:
         type: boolean
       questions:
         items:
-          $ref: '#/definitions/manager.QuestionStatInfo'
+          $ref: '#/definitions/dto.QuestionStatInfo'
         type: array
       score:
         type: integer
       test_title:
         type: string
     type: object
-  manager.UserAttemptInfo:
+  dto.UserAttemptInfo:
     properties:
       email:
         type: string
@@ -416,7 +580,7 @@ definitions:
         type: boolean
       questions:
         items:
-          $ref: '#/definitions/manager.QuestionStatInfo'
+          $ref: '#/definitions/dto.QuestionStatInfo'
         type: array
       score:
         type: integer
@@ -425,7 +589,25 @@ definitions:
       user_id:
         type: integer
     type: object
-  manager.UserInfo:
+  dto.UserEventResponse:
+    properties:
+      application_id:
+        type: integer
+      event_id:
+        type: integer
+      id:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  dto.UserEventsListResponse:
+    properties:
+      events:
+        items:
+          $ref: '#/definitions/dto.UserEventResponse'
+        type: array
+    type: object
+  dto.UserInfo:
     properties:
       id:
         type: integer
@@ -434,11 +616,11 @@ definitions:
       surname:
         type: string
     type: object
-  manager.UserStatisticsResponse:
+  dto.UserStatisticsResponse:
     properties:
       attempts:
         items:
-          $ref: '#/definitions/manager.UserAttemptDetail'
+          $ref: '#/definitions/dto.UserAttemptDetail'
         type: array
       email:
         type: string
@@ -449,318 +631,355 @@ definitions:
       user_id:
         type: integer
     type: object
-  models.ChoiceOption:
-    properties:
-      is_true:
-        type: boolean
-      text:
-        type: string
-    type: object
-  models.MatchingPair:
-    properties:
-      left:
-        type: string
-      right:
-        type: string
-    type: object
-  models.QType:
-    enum:
-    - single_choice
-    - multiple_choice
-    - text_input
-    - matching
-    - correct_order
-    type: string
-    x-enum-varnames:
-    - SingleChoice
-    - MultipleChoice
-    - TextInput
-    - Matching
-    - CorrectOrder
-  models.QuestionOptions:
-    properties:
-      case_sensitive:
-        type: boolean
-      choice:
-        items:
-          $ref: '#/definitions/models.ChoiceOption'
-        type: array
-      correct_input:
-        items:
-          type: string
-        type: array
-      matching:
-        items:
-          $ref: '#/definitions/models.MatchingPair'
-        type: array
-      sequence:
-        items:
-          $ref: '#/definitions/models.SequenceItem'
-        type: array
-    type: object
-  models.SequenceItem:
-    properties:
-      order:
-        type: integer
-      text:
-        type: string
-    type: object
 host: localhost:8080
 info:
   contact: {}
-  description: backend part of test constructor
-  title: test constructor
+  description: API для конструктора тестов
+  title: Test Constructor API
   version: "1.0"
 paths:
   /api/admin/manager/create:
     post:
       consumes:
       - application/json
-      description: Создать нового организатора
+      description: Создает нового пользователя с ролью "manager" (только для админа)
       parameters:
-      - description: Manager object
+      - description: Данные организатора
         in: body
-        name: test
+        name: user
         required: true
         schema:
-          $ref: '#/definitions/admin.CreateManagerRequest'
+          $ref: '#/definitions/dto.CreateUserRequest'
       produces:
       - application/json
       responses:
         "201":
-          description: Created
+          description: Организатор создан
           schema:
-            $ref: '#/definitions/admin.CreateManagerResponse'
+            $ref: '#/definitions/dto.CreateUserResponse'
+        "400":
+          description: Ошибка валидации
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Нет прав (не админ)
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Пользователь уже существует
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Создать организатора
       tags:
       - admin
+  /api/intern/attempt/active:
+    get:
+      description: Возвращает данные текущей незавершённой попытки пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Активная попытка
+          schema:
+            $ref: '#/definitions/dto.StartAttemptResponse'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Нет активной попытки
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получить активную попытку
+      tags:
+      - attempts
   /api/intern/attempt/finish:
     post:
       consumes:
       - application/json
-      description: Получение ответов стажёра и проверка завершения всех тестов
+      description: Проверяет ответы пользователя и завершает активную попытку
       parameters:
-      - description: Answers object
+      - description: Ответы пользователя
         in: body
         name: answers
         required: true
         schema:
-          $ref: '#/definitions/intern.FinishAttemptRequest'
+          $ref: '#/definitions/dto.FinishAttemptRequest'
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: Результаты проверки
           schema:
-            $ref: '#/definitions/intern.FinishAttemptResponse'
+            $ref: '#/definitions/dto.FinishAttemptResponse'
+        "400":
+          description: Ошибка валидации
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Активная попытка не найдена
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Завершить тест
       tags:
-      - intern
+      - attempts
   /api/intern/tests/{link}:
-    post:
+    get:
       consumes:
       - application/json
-      description: Создание попытки по ссылке конфигурации теста
+      description: Создаёт новую попытку прохождения теста по ссылке конфигурации
       parameters:
-      - description: Application ID
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/intern.StartAttemptRequest'
-      - description: Ссылка конфигурации теста
+      - description: Ссылка конфигурации теста (UUID)
         in: path
         name: link
         required: true
         type: string
+      - description: Данные для начала попытки
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.StartAttemptRequest'
       produces:
       - application/json
       responses:
         "201":
-          description: Created
+          description: Попытка создана
           schema:
-            $ref: '#/definitions/intern.StartAttemptResponse'
+            $ref: '#/definitions/dto.StartAttemptResponse'
+        "400":
+          description: Ошибка валидации
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Нет доступа к тесту
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Тест не найден
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Уже есть активная попытка или тест пройден
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
-      - ApiKeyAuth: []
-      summary: Начать тест по ссылке
+      - BearerAuth: []
+      summary: Начать тест
       tags:
-      - intern
+      - attempts
   /api/intern/tests/selection:
     get:
-      description: Промежуточная страница со списком всех тестов в мероприятии
+      description: Возвращает список доступных тестов для мероприятия с учётом замен
       parameters:
       - description: Event ID
         in: query
         name: event_id
         required: true
         type: integer
-      - description: Specialization ID
-        in: query
-        name: specialization_id
-        required: true
-        type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Список тестов
           schema:
-            $ref: '#/definitions/intern.TestSelectionResponse'
+            $ref: '#/definitions/dto.TestSelectionResponse'
+        "400":
+          description: Ошибка валидации
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Пользователь не записан на мероприятие
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
-      - ApiKeyAuth: []
-      summary: Получить список тестов для прохождения
+      - BearerAuth: []
+      summary: Получить список тестов
       tags:
-      - intern
+      - attempts
   /api/intern/users/events:
     get:
-      description: Получение списка мероприятий, на которые записался текущий пользователь
+      description: Возвращает список мероприятий, на которые записан пользователь
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Список мероприятий
           schema:
-            items:
-              $ref: '#/definitions/intern.UserEventGetInfo'
-            type: array
+            $ref: '#/definitions/dto.UserEventsListResponse'
         "401":
-          description: Unauthorized
+          description: Не авторизован
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Получить мероприятия пользователя
       tags:
-      - intern
+      - user-events
     post:
       consumes:
       - application/json
-      description: Создание связи между пользователем и мероприятием
+      description: Создает связь между пользователем и мероприятием
       parameters:
-      - description: Event data
+      - description: Данные мероприятия
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/intern.UserEventCreateInfo'
+          $ref: '#/definitions/dto.CreateUserEventRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
+          schema:
+            type: string
         "400":
-          description: Bad Request
+          description: Ошибка валидации
           schema:
-            additionalProperties:
-              type: string
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "409":
-          description: Conflict
+          description: Уже записан
           schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Записаться на мероприятие
       tags:
-      - intern
+      - user-events
   /api/manager/events:
     get:
-      description: Получить список мероприятий
+      description: Получает список всех мероприятий из CRM
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Список мероприятий
           schema:
-            $ref: '#/definitions/manager.Event'
-        "404":
-          description: Not Found
+            $ref: '#/definitions/dto.EventsListResponse'
+        "401":
+          description: Не авторизован
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Получить мероприятия
       tags:
-      - manager
+      - events
     post:
       consumes:
       - application/json
+      description: Создает новую конфигурацию тестирования для мероприятия
       parameters:
-      - description: EventCfg object
+      - description: Конфигурация
         in: body
-        name: test
+        name: config
         required: true
         schema:
-          $ref: '#/definitions/manager.EventCfgInfo'
+          $ref: '#/definitions/dto.CreateEventConfigRequest'
+      - description: Specialization ID (0 = общий тест)
+        in: body
+        name: specialization_id
+        schema:
+          type: integer
       produces:
       - application/json
       responses:
         "201":
-          description: Created
+          description: Конфигурация создана
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/dto.CreateEventConfigResponse'
+        "400":
+          description: Ошибка валидации
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
-      - ApiKeyAuth: []
-      summary: Создать настройку мероприятия
+      - BearerAuth: []
+      summary: Создать конфигурацию мероприятия
       tags:
-      - manager
+      - events
   /api/manager/events/{id}:
     put:
       consumes:
       - application/json
+      description: Обновляет существующую конфигурацию мероприятия
       parameters:
       - description: Config ID
         in: path
         name: id
         required: true
         type: integer
-      - description: EventCfg object
+      - description: Обновленная конфигурация
         in: body
-        name: test
+        name: config
         required: true
         schema:
-          $ref: '#/definitions/manager.EventCfgInfo'
+          $ref: '#/definitions/dto.UpdateEventConfigRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Конфигурация обновлена
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/dto.UpdateEventConfigResponse'
+        "400":
+          description: Ошибка валидации
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Нет прав
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Не найдена
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
-      - ApiKeyAuth: []
-      summary: Обновить настройку мероприятия
+      - BearerAuth: []
+      summary: Обновить конфигурацию
       tags:
-      - manager
+      - events
   /api/manager/events/{id}/specializations:
     get:
-      consumes:
-      - application/json
-      description: Получение списка специализаций конкретного мероприятия
+      description: Получает список специализаций конкретного мероприятия из CRM
       parameters:
       - description: Event ID
         in: path
@@ -771,31 +990,27 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Список специализаций
           schema:
-            $ref: '#/definitions/manager.EventSpecializationsResponse'
+            $ref: '#/definitions/dto.EventSpecializationsListResponse'
         "400":
-          description: Bad Request
+          description: Неверный ID
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
-          description: Not Found
+          description: Мероприятие не найдено
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Получить специализации мероприятия
       tags:
-      - manager
+      - events
   /api/manager/events/{id}/statistics:
     get:
       consumes:
       - application/json
-      description: Получение статистики всех попыток по мероприятию
+      description: Получить статистику всех попыток по мероприятию
       parameters:
       - description: Event ID
         in: path
@@ -811,85 +1026,90 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Статистика мероприятия
           schema:
-            $ref: '#/definitions/manager.StatisticsResponse'
+            $ref: '#/definitions/dto.StatisticsResponse'
         "400":
-          description: Bad Request
+          description: Неверный ID
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
-          description: Unauthorized
+          description: Не авторизован
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
-          description: Not Found
+          description: Мероприятие не найдено
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
-      - ApiKeyAuth: []
-      summary: Получить статистику по мероприятию
+      - BearerAuth: []
+      summary: Статистика мероприятия
       tags:
-      - manager
+      - statistics
   /api/manager/tests:
     get:
-      description: Получить список тестов
+      description: Возвращает список тестов.
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Список тестов
           schema:
-            $ref: '#/definitions/manager.TestsInfoResponse'
-        "404":
-          description: Not Found
+            $ref: '#/definitions/dto.TestsListResponse'
+        "401":
+          description: Не авторизован
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
-      - ApiKeyAuth: []
-      summary: Получить тесты для организотора
+      - BearerAuth: []
+      summary: Получить тесты
       tags:
-      - manager
+      - tests
     post:
       consumes:
       - application/json
-      description: Создать новый тест
+      description: Создает новый тест с вопросами
       parameters:
-      - description: Test object
+      - description: Данные теста
         in: body
         name: test
         required: true
         schema:
-          $ref: '#/definitions/manager.CreateTestInfo'
+          $ref: '#/definitions/dto.CreateTestRequest'
       produces:
       - application/json
       responses:
         "201":
-          description: Created
+          description: Тест создан
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/dto.CreateTestResponse'
+        "400":
+          description: Ошибка валидации
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Создать тест
       tags:
-      - manager
-  /api/manager/tests/delete/{id}:
-    post:
-      consumes:
-      - application/json
+      - tests
+  /api/manager/tests/{id}:
+    delete:
+      description: Удаляет тест по ID
       parameters:
       - description: ID теста
         in: path
-        minimum: 1
         name: id
         required: true
         type: integer
@@ -897,35 +1117,72 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Тест удален
+          schema:
+            $ref: '#/definitions/dto.DeleteTestResponse'
+        "404":
+          description: Тест не найден
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Удалить тест
       tags:
-      - manager
-  /api/manager/users:
+      - tests
     get:
+      description: Возвращает тест с вопросами по ID
+      parameters:
+      - description: ID теста
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Детали теста
           schema:
-            $ref: '#/definitions/manager.GetUsersResponse'
+            $ref: '#/definitions/dto.TestDetailResponse'
         "401":
-          description: Unauthorized
+          description: Не авторизован
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Тест не найден
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
+      summary: Получить тест
+      tags:
+      - tests
+  /api/manager/users:
+    get:
+      description: Получить список всех пользователей с ролью "intern"
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список стажёров
+          schema:
+            $ref: '#/definitions/dto.GetUsersResponse'
+        "401":
+          description: Не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Список стажёров
       tags:
-      - manager
+      - statistics
   /api/manager/users/{id}:
     get:
-      description: Получение статистики всех попыток конкретного пользователя
+      description: Получить статистику всех попыток пользователя
       parameters:
       - description: User ID
         in: path
@@ -936,78 +1193,97 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Статистика пользователя
           schema:
-            $ref: '#/definitions/manager.UserStatisticsResponse'
+            $ref: '#/definitions/dto.UserStatisticsResponse'
         "400":
-          description: Bad Request
+          description: Неверный ID
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
-          description: Unauthorized
+          description: Не авторизован
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
-          description: Not Found
+          description: Пользователь не найден
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
-      - ApiKeyAuth: []
-      summary: Получить статистику пользователя
+      - BearerAuth: []
+      summary: Статистика пользователя
       tags:
-      - manager
+      - statistics
   /login:
     post:
       consumes:
       - application/json
-      description: Логин
+      description: Авторизация пользователя по email и паролю
       parameters:
-      - description: User object
+      - description: Учетные данные
         in: body
-        name: user
+        name: credentials
         required: true
         schema:
-          $ref: '#/definitions/auth.LoginRequest'
+          $ref: '#/definitions/dto.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Успешный вход
           schema:
-            $ref: '#/definitions/auth.LoginResponse'
-      summary: Вход
+            $ref: '#/definitions/dto.LoginResponse'
+        "400":
+          description: Не все поля заполнены
+          schema:
+            type: string
+        "401":
+          description: Неверный логин или пароль
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            type: string
+      summary: Вход в систему
       tags:
-      - users
+      - auth
   /register:
     post:
       consumes:
       - application/json
-      description: Создать нового пользователя
+      description: Создает нового пользователя с ролью "intern"
       parameters:
-      - description: User object
+      - description: Данные для регистрации
         in: body
         name: user
         required: true
         schema:
-          $ref: '#/definitions/auth.RegisterRequest'
+          $ref: '#/definitions/dto.RegisterRequest'
       produces:
       - application/json
       responses:
         "201":
-          description: Created
+          description: Пользователь успешно создан
           schema:
-            $ref: '#/definitions/auth.RegisterResponse'
-      summary: Создать пользователя
+            $ref: '#/definitions/dto.RegisterResponse'
+        "400":
+          description: Не все поля заполнены
+          schema:
+            type: string
+        "409":
+          description: Пользователь уже существует
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            type: string
+      summary: Регистрация пользователя
       tags:
-      - users
+      - auth
 securityDefinitions:
-  ApiKeyAuth:
+  BearerAuth:
+    description: 'Введите токен в формате: Bearer {ваш_токен}'
     in: header
     name: Authorization
     type: apiKey
