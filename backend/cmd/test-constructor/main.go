@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"strings"
 	"test-constructor/config"
 	"test-constructor/internal/auth"
 	"test-constructor/internal/client"
@@ -59,22 +60,35 @@ func main() {
 	eventService := service.NewEventService(crmClient)
 	attemptService := service.NewAttemptService(attemptRepo, answerRepo, eventConfigRepo, extraThresholdRepo, questionRepo, userEventRepo, txManager, crmClient)
 	testSelectionService := service.NewTestSelectionService(eventConfigRepo, userEventRepo, attemptRepo, extraThresholdRepo)
-	statisticsService := service.NewStatisticsService(statisticsRepo, crmClient)
+	statisticsService := service.NewStatisticsService(statisticsRepo, eventService)
 
 	authHandler := handler.NewAuthHandler(authService)
 	testHandler := handler.NewTestHandler(testService)
 	eventConfigHandler := handler.NewEventConfigHandler(eventConfigService)
 	userEventHandler := handler.NewUserEventHandler(userEventService)
 	eventHandler := handler.NewEventHandler(eventService)
-	attemptHandler := handler.NewAttemptHandler(attemptService)
+	attemptHandler := handler.NewAttemptHandler(attemptService, testSelectionService)
 	testSelectionHandler := handler.NewTestSelectionHandler(testSelectionService)
 	statisticsHandler := handler.NewStatisticsHandler(statisticsService)
 	adminHandler := handler.NewAdminHandler(authService)
+	ssoHandler := handler.NewSSOHandler(
+		authService,
+		userEventService,
+		attemptService,
+		jwtService,
+		crmClient,
+		userRepo,
+		roleRepo,
+		eventConfigRepo,
+		attemptRepo,
+		cfg,
+	)
 
 	r := mux.NewRouter()
 
 	r.HandleFunc("/register", authHandler.Register).Methods("POST")
 	r.HandleFunc("/login", authHandler.Login).Methods("POST")
+	r.HandleFunc("/sso/exchange", ssoHandler.SSOExchange).Methods("POST")
 
 	api := r.PathPrefix("/api").Subrouter()
 	api.Use(middleware.AuthMiddleware(jwtService))
@@ -88,6 +102,7 @@ func main() {
 	m.HandleFunc("/events", eventHandler.GetEvents).Methods("GET")
 	m.HandleFunc("/events", eventConfigHandler.CreateConfig).Methods("POST")
 	m.HandleFunc("/events/{id:[0-9]+}", eventConfigHandler.UpdateConfig).Methods("PUT")
+	m.HandleFunc("/events/{id:[0-9]+/configs", eventConfigHandler.GetEventConfigs).Methods("GET")
 	m.HandleFunc("/events/{id:[0-9]+}/specializations", eventHandler.GetEventSpecializations).Methods("GET")
 	m.HandleFunc("/events/{id:[0-9]+}/statistics", statisticsHandler.GetEventStatistics).Methods("GET")
 	m.HandleFunc("/users", statisticsHandler.GetInternList).Methods("GET")
@@ -108,16 +123,20 @@ func main() {
 
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
+	allowedOrigins := []string{"http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174"}
+	if strings.TrimSpace(cfg.ClientURL) != "" {
+		allowedOrigins = append(allowedOrigins, strings.TrimRight(cfg.ClientURL, "/"))
+	}
+
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{clientURL, "http://127.0.0.1:8080"},
+		AllowedOrigins:   allowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "OPTIONS", "DELETE"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
-		Debug:            true,
 	})
 
 	handler := c.Handler(r)
 
-	log.Println("Starting server on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", handler))
+	log.Printf("starting server on port %s", cfg.Port)
+	log.Fatal(http.ListenAndServe(":"+cfg.Port, handler))
 }

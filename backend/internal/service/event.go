@@ -1,13 +1,15 @@
 package service
 
 import (
+	"test-constructor/internal/auth"
 	"test-constructor/internal/client"
 	"test-constructor/internal/dto"
 )
 
 type EventService interface {
-	GetEvents() (*dto.EventsListResponse, error)
+	GetEvents(claims *auth.JWTClaims) (*dto.EventsListResponse, error)
 	GetEventSpecializations(eventID int) (*dto.EventSpecializationsListResponse, error)
+	GetAllEvents() ([]client.Event, error)
 }
 
 type eventService struct {
@@ -20,18 +22,32 @@ func NewEventService(crmClient client.CRMClient) EventService {
 	}
 }
 
-func (s *eventService) GetEvents() (*dto.EventsListResponse, error) {
+func (s *eventService) GetEvents(claims *auth.JWTClaims) (*dto.EventsListResponse, error) {
 	events, err := s.crmClient.GetEvents()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &dto.EventsListResponse{
-		Events: make([]dto.EventResponse, len(events)),
-		Total:  len(events),
-	}
+	filtered := make([]dto.EventResponse, 0, len(events))
+	for _, event := range events {
+		if claims != nil && !claims.CanManageEvent(uint(event.ID)) {
+			continue
+		}
+		if event.Name == "" {
+			event.Name = event.Title
+		}
+		if event.StartDate == "" {
+			event.StartDate = event.StartDateAlt
+		}
+		if event.EndDate == "" {
+			event.EndDate = event.EndDateAlt
+		}
+		for i := range event.Specializations {
+			if event.Specializations[i].Name == "" {
+				event.Specializations[i].Name = event.Specializations[i].Title
+			}
+		}
 
-	for i, event := range events {
 		specializations := make([]dto.EventSpecializationResponse, len(event.Specializations))
 		for j, spec := range event.Specializations {
 			specializations[j] = dto.EventSpecializationResponse{
@@ -40,15 +56,19 @@ func (s *eventService) GetEvents() (*dto.EventsListResponse, error) {
 			}
 		}
 
-		response.Events[i] = dto.EventResponse{
+		filtered = append(filtered, dto.EventResponse{
+			ID:              uint(event.ID),
 			Name:            event.Name,
 			StartDate:       event.StartDate,
 			EndDate:         event.EndDate,
 			Specializations: specializations,
-		}
+		})
 	}
 
-	return response, nil
+	return &dto.EventsListResponse{
+		Events: filtered,
+		Total:  len(filtered),
+	}, nil
 }
 
 func (s *eventService) GetEventSpecializations(eventID int) (*dto.EventSpecializationsListResponse, error) {
@@ -59,6 +79,9 @@ func (s *eventService) GetEventSpecializations(eventID int) (*dto.EventSpecializ
 
 	specializations := make([]dto.EventSpecializationResponse, len(eventDetail.Specializations))
 	for i, spec := range eventDetail.Specializations {
+		if spec.Name == "" {
+			spec.Name = spec.Title
+		}
 		specializations[i] = dto.EventSpecializationResponse{
 			ID:   spec.ID,
 			Name: spec.Name,
@@ -69,4 +92,8 @@ func (s *eventService) GetEventSpecializations(eventID int) (*dto.EventSpecializ
 		EventID:         eventID,
 		Specializations: specializations,
 	}, nil
+}
+
+func (s *eventService) GetAllEvents() ([]client.Event, error) {
+	return s.crmClient.GetEvents()
 }

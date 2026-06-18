@@ -18,9 +18,9 @@ func NewEventHandler(eventService service.EventService) *EventHandler {
 	}
 }
 
-// GetEvents возвращает список мероприятий из CRM
+// GetEvents возвращает список мероприятий из CRM с фильтрацией по правам
 // @Summary      Получить мероприятия
-// @Description  Получает список всех мероприятий из CRM
+// @Description  Получает список всех мероприятий из CRM с учетом прав менеджера
 // @Security     BearerAuth
 // @Tags         events
 // @Produce      json
@@ -29,7 +29,13 @@ func NewEventHandler(eventService service.EventService) *EventHandler {
 // @Failure      500  {object}  dto.ErrorResponse        "Ошибка сервера"
 // @Router       /api/manager/events [get]
 func (h *EventHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
-	resp, err := h.eventService.GetEvents()
+	claims, ok := GetUserFromContext(r)
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "Не авторизован")
+		return
+	}
+
+	resp, err := h.eventService.GetEvents(claims)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Ошибка получения мероприятий: "+err.Error())
 		return
@@ -68,9 +74,4 @@ func (h *EventHandler) GetEventSpecializations(w http.ResponseWriter, r *http.Re
 	}
 
 	writeJSON(w, http.StatusOK, resp)
-}
-
-func (h *EventHandler) RegisterRoutes(r *mux.Router) {
-	r.HandleFunc("/events", h.GetEvents).Methods("GET")
-	r.HandleFunc("/events/{id:[0-9]+}/specializations", h.GetEventSpecializations).Methods("GET")
 }

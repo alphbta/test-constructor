@@ -10,6 +10,7 @@ type UserRepository interface {
 	Create(user *domain.User) error
 	FindByEmail(email string) (*domain.User, error)
 	FindByID(id uint) (*domain.User, error)
+	Update(user *domain.User) error
 }
 
 type userRepository struct {
@@ -40,4 +41,8 @@ func (r *userRepository) FindByID(id uint) (*domain.User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (r *userRepository) Update(user *domain.User) error {
+	return r.db.Save(user).Error
 }

@@ -11,13 +11,6 @@ type CreateEventConfigRequest struct {
 	ExtraThreshold   []ExtraThresholdRequest `json:"extra_threshold"`
 }
 
-type ExtraThresholdRequest struct {
-	Threshold     int    `json:"threshold"`
-	Message       string `json:"message"`
-	TestID        uint   `json:"test_id"`
-	TestThreshold int    `json:"test_threshold"`
-}
-
 type UpdateEventConfigRequest struct {
 	EventID          uint                    `json:"event_id"`
 	SpecializationID uint                    `json:"specialization_id"`
@@ -27,6 +20,12 @@ type UpdateEventConfigRequest struct {
 	TimeLimit        int                     `json:"time_limit"`
 	Threshold        int                     `json:"threshold"`
 	ExtraThreshold   []ExtraThresholdRequest `json:"extra_threshold"`
+}
+
+type ExtraThresholdRequest struct {
+	Threshold int    `json:"threshold"`
+	Message   string `json:"message"`
+	TestID    uint   `json:"test_id"`
 }
 
 type EventConfigResponse struct {
@@ -39,7 +38,6 @@ type EventConfigResponse struct {
 	TimeLimit        int                      `json:"time_limit"`
 	Threshold        int                      `json:"threshold"`
 	TestLink         string                   `json:"test_link"`
-	IsExtra          bool                     `json:"is_extra"`
 	ExtraThreshold   []ExtraThresholdResponse `json:"extra_threshold,omitempty"`
 }
 
@@ -49,12 +47,17 @@ type ExtraThresholdResponse struct {
 	TestID    uint   `json:"test_id"`
 }
 
+type EventConfigsResponse struct {
+	Configs []EventConfigResponse `json:"configs"`
+}
+
 type CreateEventConfigResponse struct {
 	ConfigID uint   `json:"config_id"`
-	Message  string `json:"message"`
+	TestLink string `json:"test_link"`
+	Created  bool   `json:"created"`
 }
 
 type UpdateEventConfigResponse struct {
 	ConfigID uint   `json:"config_id"`
-	Message  string `json:"message"`
+	TestLink string `json:"test_link"`
 }

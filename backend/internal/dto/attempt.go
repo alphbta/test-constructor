@@ -1,18 +1,20 @@
 package dto
 
+import "test-constructor/internal/domain"
+
 type StartAttemptRequest struct {
 	ApplicationID uint `json:"application_id"`
 }
 
 type StartAttemptResponse struct {
-	AttemptID   uint             `json:"attempt_id"`
-	ConfigID    uint             `json:"config_id"`
-	TestID      uint             `json:"test_id"`
-	Title       string           `json:"title"`
-	Description string           `json:"description"`
-	TimeLimit   int              `json:"time_limit"`
-	Threshold   int              `json:"threshold"`
-	Questions   []QuestionPublic `json:"questions"`
+	ConfigID      uint             `json:"config_id"`
+	TestID        uint             `json:"test_id"`
+	ApplicationID uint             `json:"application_id"`
+	Title         string           `json:"title"`
+	Description   string           `json:"description"`
+	TimeLimit     int              `json:"time_limit"`
+	Threshold     int              `json:"threshold"`
+	Questions     []QuestionPublic `json:"questions"`
 }
 
 type QuestionPublic struct {
@@ -20,20 +22,25 @@ type QuestionPublic struct {
 	Text        string        `json:"text"`
 	Points      int           `json:"points"`
 	OrderNumber int           `json:"order_number"`
-	Type        string        `json:"type"`
+	Type        domain.QType  `json:"type"`
 	Options     PublicOptions `json:"options"`
 }
 
 type PublicOptions struct {
-	Choices       []string        `json:"choices,omitempty"`
+	Choices       []PublicChoice  `json:"choice,omitempty"`
 	Matching      *PublicMatching `json:"matching,omitempty"`
 	CaseSensitive bool            `json:"case_sensitive,omitempty"`
 	Sequence      []string        `json:"sequence,omitempty"`
 }
 
+type PublicChoice struct {
+	Text  string `json:"text"`
+	Index int    `json:"index"`
+}
+
 type PublicMatching struct {
-	LeftColumn  []string `json:"left"`
-	RightColumn []string `json:"right"`
+	LeftColumn  []string `json:"left,omitempty"`
+	RightColumn []string `json:"right,omitempty"`
 }
 
 type FinishAttemptRequest struct {

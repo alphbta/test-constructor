@@ -7,10 +7,10 @@ type CreateUserEventRequest struct {
 }
 
 type UserEventResponse struct {
-	ID            uint `json:"id"`
-	EventID       uint `json:"event_id"`
-	UserID        uint `json:"user_id"`
-	ApplicationID uint `json:"application_id"`
+	ID               uint `json:"id"`
+	EventID          uint `json:"event_id"`
+	SpecializationID uint `json:"specialization_id"`
+	ApplicationID    uint `json:"application_id"`
 }
 
 type UserEventsListResponse struct {

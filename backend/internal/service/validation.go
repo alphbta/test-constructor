@@ -49,7 +49,7 @@ func (s *validationService) ValidateEventConfig(
 	}
 
 	for i, extra := range req.ExtraThreshold {
-		if err := s.ValidateThreshold(extra.TestID, extra.TestThreshold); err != nil {
+		if err := s.ValidateThreshold(extra.TestID, extra.Threshold); err != nil {
 			return fmt.Errorf("дополнительный тест #%d: %w", i+1, err)
 		}
 

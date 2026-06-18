@@ -3,35 +3,34 @@ package service
 import (
 	"fmt"
 	"sort"
-	"test-constructor/internal/client"
 	"test-constructor/internal/domain"
 	"test-constructor/internal/dto"
 	"test-constructor/internal/repository"
 )
 
 type StatisticsService interface {
-	GetInternList() (*dto.GetUsersResponse, error)
-	GetUserStatistics(userID uint) (*dto.UserStatisticsResponse, error)
+	GetInternList(scopedEventIDs []uint) (*dto.GetUsersResponse, error)
+	GetUserStatistics(userID uint, scopedEventIDs []uint) (*dto.UserStatisticsResponse, error)
 	GetEventStatistics(eventID uint, filter *dto.StatisticsFilter) (*dto.StatisticsResponse, error)
 }
 
 type statisticsService struct {
-	statsRepo repository.StatisticsRepository
-	crmClient client.CRMClient
+	statsRepo    repository.StatisticsRepository
+	eventService EventService
 }
 
 func NewStatisticsService(
 	statsRepo repository.StatisticsRepository,
-	crmClient client.CRMClient,
+	eventService EventService,
 ) StatisticsService {
 	return &statisticsService{
-		statsRepo: statsRepo,
-		crmClient: crmClient,
+		statsRepo:    statsRepo,
+		eventService: eventService,
 	}
 }
 
-func (s *statisticsService) GetInternList() (*dto.GetUsersResponse, error) {
-	users, err := s.statsRepo.FindInternsByRole("intern")
+func (s *statisticsService) GetInternList(scopedEventIDs []uint) (*dto.GetUsersResponse, error) {
+	users, err := s.statsRepo.FindInterns(scopedEventIDs)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения списка стажёров: %w", err)
 	}
@@ -42,6 +41,7 @@ func (s *statisticsService) GetInternList() (*dto.GetUsersResponse, error) {
 			ID:      user.ID,
 			Name:    user.Name,
 			Surname: user.Surname,
+			Email:   user.Email,
 		}
 	}
 
@@ -50,57 +50,41 @@ func (s *statisticsService) GetInternList() (*dto.GetUsersResponse, error) {
 	}, nil
 }
 
-func (s *statisticsService) GetUserStatistics(userID uint) (*dto.UserStatisticsResponse, error) {
+func (s *statisticsService) GetUserStatistics(userID uint, scopedEventIDs []uint) (*dto.UserStatisticsResponse, error) {
 	user, err := s.statsRepo.FindUserByID(userID)
 	if err != nil {
 		return nil, fmt.Errorf("пользователь не найден: %w", err)
 	}
 
-	attempts, err := s.statsRepo.FindCompletedAttemptsByUserID(userID)
+	attempts, err := s.statsRepo.FindCompletedAttemptsByUserID(userID, scopedEventIDs)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения попыток: %w", err)
 	}
 
-	events, err := s.crmClient.GetEvents()
-	if err != nil {
-		return nil, fmt.Errorf("ошибка получения мероприятий: %w", err)
-	}
-
-	eventMap := make(map[uint]string)
-	for _, event := range events {
-		eventMap[uint(event.ID)] = event.Name
-	}
-
+	eventNames := s.loadEventNames()
 	attemptDetails := make([]dto.UserAttemptDetail, 0, len(attempts))
 	for _, attempt := range attempts {
 		cfg := attempt.EventConfig
-
-		eventName, exists := eventMap[cfg.EventID]
-		if !exists {
-			eventName = fmt.Sprintf("Event #%d", cfg.EventID)
-		}
-
 		maxScore := 0
-		questionMap := make(map[uint]domain.Question)
-		for _, q := range cfg.Test.Questions {
-			maxScore += q.Points
-			questionMap[q.ID] = q
+		for _, question := range cfg.Test.Questions {
+			maxScore += question.Points
 		}
 
-		questions := s.getQuestionsStat(attempt.Answers, questionMap)
+		eventName := eventNames[cfg.EventID]
+		if eventName == "" {
+			eventName = fmt.Sprintf("Мероприятие #%d", cfg.EventID)
+		}
 
-		detail := dto.UserAttemptDetail{
+		attemptDetails = append(attemptDetails, dto.UserAttemptDetail{
 			AttemptID: attempt.AttemptID,
 			TestTitle: cfg.Test.Title,
 			EventName: eventName,
-			IsExtra:   cfg.IsExtra,
+			IsExtra:   false,
 			Score:     attempt.Score,
 			MaxScore:  maxScore,
 			Passed:    attempt.Passed,
-			Questions: questions,
-		}
-
-		attemptDetails = append(attemptDetails, detail)
+			Questions: buildQuestionStats(attempt.Answers),
+		})
 	}
 
 	return &dto.UserStatisticsResponse{
@@ -136,7 +120,6 @@ func (s *statisticsService) GetEventStatistics(eventID uint, filter *dto.Statist
 	for i, cfg := range configs {
 		configIDs[i] = cfg.ConfigID
 		configMap[cfg.ConfigID] = cfg
-
 		questionMap[cfg.ConfigID] = make(map[uint]domain.Question)
 		for _, q := range cfg.Test.Questions {
 			questionMap[cfg.ConfigID][q.ID] = q
@@ -166,7 +149,7 @@ func (s *statisticsService) GetEventStatistics(eventID uint, filter *dto.Statist
 			timeSpent = int(duration.Minutes())
 		}
 
-		questions := s.getQuestionsStat(attempt.Answers, questionMap[cfg.ConfigID])
+		questions := buildQuestionStats(attempt.Answers)
 
 		attemptInfo := dto.UserAttemptInfo{
 			UserID:    attempt.InternID,
@@ -189,33 +172,39 @@ func (s *statisticsService) GetEventStatistics(eventID uint, filter *dto.Statist
 	}, nil
 }
 
-func (s *statisticsService) getQuestionsStat(answers []domain.Answer, questionsMap map[uint]domain.Question) []dto.QuestionStatInfo {
-	var questionsStat []dto.QuestionStatInfo
+func (s *statisticsService) loadEventNames() map[uint]string {
+	eventNames := make(map[uint]string)
+	events, err := s.eventService.GetAllEvents()
+	if err != nil {
+		return eventNames
+	}
 
-	for _, answer := range answers {
-		question, exists := questionsMap[answer.QuestionID]
-		if !exists {
-			if answer.Question.ID != 0 {
-				question = answer.Question
-			} else {
-				continue
-			}
+	for _, event := range events {
+		if event.ID > 0 && event.Name != "" {
+			eventNames[uint(event.ID)] = event.Name
 		}
+	}
 
-		questionInfo := dto.QuestionStatInfo{
+	return eventNames
+}
+
+func buildQuestionStats(answers []domain.Answer) []dto.QuestionStatInfo {
+	stats := make([]dto.QuestionStatInfo, 0, len(answers))
+	for _, answer := range answers {
+		question := answer.Question
+		stats = append(stats, dto.QuestionStatInfo{
 			Text:         question.Text,
 			Points:       answer.Points,
 			MaxPoints:    question.Points,
 			IsCorrect:    answer.IsCorrect,
 			QuestionType: string(question.Type),
 			OrderNumber:  question.OrderNumber,
-		}
-		questionsStat = append(questionsStat, questionInfo)
+		})
 	}
 
-	sort.Slice(questionsStat, func(i, j int) bool {
-		return questionsStat[i].OrderNumber < questionsStat[j].OrderNumber
+	sort.Slice(stats, func(i, j int) bool {
+		return stats[i].OrderNumber < stats[j].OrderNumber
 	})
 
-	return questionsStat
+	return stats
 }

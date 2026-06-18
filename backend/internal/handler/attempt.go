@@ -1,117 +1,70 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
-	"test-constructor/internal/dto"
-	"test-constructor/internal/service"
+	"strconv"
 
 	"github.com/gorilla/mux"
+
+	"test-constructor/internal/dto"
+	"test-constructor/internal/service"
 )
 
 type AttemptHandler struct {
-	attemptService service.AttemptService
+	attemptService       service.AttemptService
+	testSelectionService service.TestSelectionService
 }
 
 func NewAttemptHandler(
 	attemptService service.AttemptService,
+	testSelectionService service.TestSelectionService,
 ) *AttemptHandler {
 	return &AttemptHandler{
-		attemptService: attemptService,
+		attemptService:       attemptService,
+		testSelectionService: testSelectionService,
 	}
 }
 
 // StartAttempt начинает попытку прохождения теста
 // @Summary      Начать тест
-// @Description  Создаёт новую попытку прохождения теста по ссылке конфигурации
+// @Description  Создаёт новую попытку прохождения теста по ссылке конфигурации или возобновляет существующую
 // @Security     BearerAuth
 // @Tags         attempts
 // @Accept       json
 // @Produce      json
-// @Param        link  path      string                      true  "Ссылка конфигурации теста (UUID)"
-// @Param        body  body      dto.StartAttemptRequest     true  "Данные для начала попытки"
-// @Success      201   {object}  dto.StartAttemptResponse    "Попытка создана"
-// @Failure      400   {object}  dto.ErrorResponse           "Ошибка валидации"
-// @Failure      401   {object}  dto.ErrorResponse           "Не авторизован"
-// @Failure      403   {object}  dto.ErrorResponse           "Нет доступа к тесту"
-// @Failure      404   {object}  dto.ErrorResponse           "Тест не найден"
-// @Failure      409   {object}  dto.ErrorResponse           "Уже есть активная попытка или тест пройден"
+// @Param        link             path      string                      true  "Ссылка конфигурации теста (UUID)"
+// @Param        application_id   query     uint                        false "Application ID"
+// @Param        body             body      dto.StartAttemptRequest     false "Данные для начала попытки"
+// @Success      200  {object}  dto.StartAttemptResponse  "Попытка возобновлена"
+// @Success      201  {object}  dto.StartAttemptResponse  "Попытка создана"
+// @Failure      400  {object}  dto.ErrorResponse          "Ошибка валидации"
+// @Failure      401  {object}  dto.ErrorResponse          "Не авторизован"
+// @Failure      403  {object}  dto.ErrorResponse          "Нет доступа к тесту"
+// @Failure      404  {object}  dto.ErrorResponse          "Тест не найден"
+// @Failure      409  {object}  dto.ErrorResponse          "Тест уже пройден"
 // @Router       /api/intern/tests/{link} [get]
 func (h *AttemptHandler) StartAttempt(w http.ResponseWriter, r *http.Request) {
 	claims, ok := GetUserFromContext(r)
 	if !ok {
-		writeError(w, http.StatusUnauthorized, "Пользователь не авторизован")
+		writeError(w, http.StatusUnauthorized, "User is not authorized")
 		return
 	}
 
 	vars := mux.Vars(r)
 	link := vars["link"]
-	if link == "" {
-		writeError(w, http.StatusBadRequest, "Не указана ссылка на тест")
-		return
-	}
 
-	var req dto.StartAttemptRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "Неправильный формат запроса")
-		return
-	}
+	req := readStartAttemptRequest(r)
 
-	if req.ApplicationID == 0 {
-		writeError(w, http.StatusBadRequest, "Application ID обязателен")
-		return
-	}
-
-	resp, err := h.attemptService.StartAttempt(claims.UserID, link, req)
+	resp, statusCode, err := h.attemptService.StartAttempt(claims.UserID, link, req)
 	if err != nil {
-		status := http.StatusInternalServerError
-		switch err.Error() {
-		case "тест не найден":
-			status = http.StatusNotFound
-		case "у вас уже есть активная попытка. Завершите её перед началом новой":
-			status = http.StatusConflict
-		case "вы уже прошли этот тест":
-			status = http.StatusConflict
-		case "у вас нет доступа к этому дополнительному тесту":
-			status = http.StatusForbidden
-		default:
-			status = http.StatusBadRequest
-		}
-		writeError(w, status, err.Error())
+		writeError(w, statusCode, err.Error())
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, resp)
-}
-
-// GetActiveAttempt возвращает информацию об активной попытке
-// @Summary      Получить активную попытку
-// @Description  Возвращает данные текущей незавершённой попытки пользователя
-// @Security     BearerAuth
-// @Tags         attempts
-// @Produce      json
-// @Success      200  {object}  dto.StartAttemptResponse  "Активная попытка"
-// @Failure      401  {object}  dto.ErrorResponse          "Не авторизован"
-// @Failure      404  {object}  dto.ErrorResponse          "Нет активной попытки"
-// @Router       /api/intern/attempt/active [get]
-func (h *AttemptHandler) GetActiveAttempt(w http.ResponseWriter, r *http.Request) {
-	claims, ok := GetUserFromContext(r)
-	if !ok {
-		writeError(w, http.StatusUnauthorized, "Пользователь не авторизован")
-		return
-	}
-
-	resp, err := h.attemptService.GetActiveAttempt(claims.UserID)
-	if err != nil {
-		status := http.StatusInternalServerError
-		if err.Error() == "активная попытка не найдена" {
-			status = http.StatusNotFound
-		}
-		writeError(w, status, err.Error())
-		return
-	}
-
-	writeJSON(w, http.StatusOK, resp)
+	writeJSON(w, statusCode, resp)
 }
 
 // FinishAttempt завершает попытку и проверяет ответы
@@ -130,7 +83,7 @@ func (h *AttemptHandler) GetActiveAttempt(w http.ResponseWriter, r *http.Request
 func (h *AttemptHandler) FinishAttempt(w http.ResponseWriter, r *http.Request) {
 	claims, ok := GetUserFromContext(r)
 	if !ok {
-		writeError(w, http.StatusUnauthorized, "Пользователь не авторизован")
+		writeError(w, http.StatusUnauthorized, "User is not authorized")
 		return
 	}
 
@@ -140,27 +93,68 @@ func (h *AttemptHandler) FinishAttempt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(req.UserAnswers) == 0 {
-		writeError(w, http.StatusBadRequest, "Не переданы ответы")
-		return
-	}
-
 	resp, err := h.attemptService.FinishAttempt(claims.UserID, req)
 	if err != nil {
 		status := http.StatusInternalServerError
-		switch err.Error() {
-		case "активная попытка не найдена":
+		if err.Error() == "active attempt was not found" {
 			status = http.StatusNotFound
-		case "ответы не соответствуют тесту":
-			status = http.StatusBadRequest
-		default:
-			if len(err.Error()) > 0 {
-				status = http.StatusBadRequest
-			}
 		}
 		writeError(w, status, err.Error())
 		return
 	}
 
 	writeJSON(w, http.StatusOK, resp)
+}
+
+// GetActiveAttempt возвращает информацию об активной попытке
+// @Summary      Получить активную попытку
+// @Description  Возвращает данные текущей незавершённой попытки пользователя
+// @Security     BearerAuth
+// @Tags         attempts
+// @Produce      json
+// @Success      200  {object}  dto.StartAttemptResponse  "Активная попытка"
+// @Failure      401  {object}  dto.ErrorResponse          "Не авторизован"
+// @Failure      404  {object}  dto.ErrorResponse          "Нет активной попытки"
+// @Router       /api/intern/attempt/active [get]
+func (h *AttemptHandler) GetActiveAttempt(w http.ResponseWriter, r *http.Request) {
+	claims, ok := GetUserFromContext(r)
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "User is not authorized")
+		return
+	}
+
+	resp, err := h.attemptService.GetActiveAttempt(claims.UserID)
+	if err != nil {
+		status := http.StatusInternalServerError
+		if err.Error() == "активная попытка не найдена" {
+			status = http.StatusNotFound
+		}
+		writeError(w, status, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func readStartAttemptRequest(r *http.Request) dto.StartAttemptRequest {
+	var req dto.StartAttemptRequest
+
+	if raw := r.URL.Query().Get("application_id"); raw != "" {
+		if parsed, err := strconv.ParseUint(raw, 10, 64); err == nil {
+			req.ApplicationID = uint(parsed)
+		}
+	}
+
+	if r.Body == nil {
+		return req
+	}
+	defer r.Body.Close()
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil || len(bytes.TrimSpace(body)) == 0 {
+		return req
+	}
+
+	_ = json.Unmarshal(body, &req)
+	return req
 }

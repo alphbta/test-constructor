@@ -22,7 +22,7 @@ func NewStatisticsHandler(statisticsService service.StatisticsService) *Statisti
 
 // GetInternList возвращает список стажёров
 // @Summary      Список стажёров
-// @Description  Получить список всех пользователей с ролью "intern"
+// @Description  Получить список всех пользователей с ролью "intern" с учетом прав менеджера
 // @Security     BearerAuth
 // @Tags         statistics
 // @Produce      json
@@ -31,7 +31,14 @@ func NewStatisticsHandler(statisticsService service.StatisticsService) *Statisti
 // @Failure      500  {object}  dto.ErrorResponse      "Внутренняя ошибка"
 // @Router       /api/manager/users [get]
 func (h *StatisticsHandler) GetInternList(w http.ResponseWriter, r *http.Request) {
-	resp, err := h.statisticsService.GetInternList()
+	claims, ok := GetUserFromContext(r)
+
+	var scopedEventIDs []uint
+	if ok && claims.HasLimitedEventScope() {
+		scopedEventIDs = claims.ScopedEventIDs()
+	}
+
+	resp, err := h.statisticsService.GetInternList(scopedEventIDs)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Ошибка получения списка стажёров")
 		return
@@ -42,7 +49,7 @@ func (h *StatisticsHandler) GetInternList(w http.ResponseWriter, r *http.Request
 
 // GetUserStatistics возвращает статистику конкретного пользователя
 // @Summary      Статистика пользователя
-// @Description  Получить статистику всех попыток пользователя
+// @Description  Получить статистику всех попыток пользователя с учетом прав менеджера
 // @Security     BearerAuth
 // @Tags         statistics
 // @Produce      json
@@ -54,22 +61,24 @@ func (h *StatisticsHandler) GetInternList(w http.ResponseWriter, r *http.Request
 // @Router       /api/manager/users/{id} [get]
 func (h *StatisticsHandler) GetUserStatistics(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	userIDStr := vars["id"]
-
-	userID, err := strconv.ParseUint(userIDStr, 10, 32)
-	if err != nil {
+	userID, err := strconv.ParseUint(vars["id"], 10, 32)
+	if err != nil || userID == 0 {
 		writeError(w, http.StatusBadRequest, "Неверный формат user_id")
 		return
 	}
 
-	resp, err := h.statisticsService.GetUserStatistics(uint(userID))
+	claims, ok := GetUserFromContext(r)
+
+	var scopedEventIDs []uint
+	if ok && claims.HasLimitedEventScope() {
+		scopedEventIDs = claims.ScopedEventIDs()
+	}
+
+	resp, err := h.statisticsService.GetUserStatistics(uint(userID), scopedEventIDs)
 	if err != nil {
 		status := http.StatusInternalServerError
-		switch err.Error() {
-		case "пользователь не найден":
+		if err.Error() == "пользователь не найден" {
 			status = http.StatusNotFound
-		default:
-			status = http.StatusBadRequest
 		}
 		writeError(w, status, err.Error())
 		return
@@ -90,15 +99,20 @@ func (h *StatisticsHandler) GetUserStatistics(w http.ResponseWriter, r *http.Req
 // @Success      200       {object}  dto.StatisticsResponse   "Статистика мероприятия"
 // @Failure      400       {object}  dto.ErrorResponse        "Неверный ID"
 // @Failure      401       {object}  dto.ErrorResponse        "Не авторизован"
+// @Failure      403       {object}  dto.ErrorResponse        "Нет прав"
 // @Failure      404       {object}  dto.ErrorResponse        "Мероприятие не найдено"
 // @Router       /api/manager/events/{id}/statistics [get]
 func (h *StatisticsHandler) GetEventStatistics(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	eventIDStr := vars["id"]
-
-	eventID, err := strconv.ParseUint(eventIDStr, 10, 32)
-	if err != nil {
+	eventID, err := strconv.ParseUint(vars["id"], 10, 32)
+	if err != nil || eventID == 0 {
 		writeError(w, http.StatusBadRequest, "Неверный формат event_id")
+		return
+	}
+
+	claims, ok := GetUserFromContext(r)
+	if ok && !claims.CanManageEvent(uint(eventID)) {
+		writeError(w, http.StatusForbidden, "Forbidden")
 		return
 	}
 
@@ -117,11 +131,8 @@ func (h *StatisticsHandler) GetEventStatistics(w http.ResponseWriter, r *http.Re
 	resp, err := h.statisticsService.GetEventStatistics(uint(eventID), filter)
 	if err != nil {
 		status := http.StatusInternalServerError
-		switch err.Error() {
-		case "мероприятие не найдено":
+		if err.Error() == "мероприятие не найдено" {
 			status = http.StatusNotFound
-		default:
-			status = http.StatusBadRequest
 		}
 		writeError(w, status, err.Error())
 		return

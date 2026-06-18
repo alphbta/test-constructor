@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"test-constructor/internal/domain"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -13,13 +14,18 @@ type EventConfigRepository interface {
 	FindByID(id uint) (*domain.EventConfig, error)
 	FindByIDFull(id uint) (*domain.EventConfig, error)
 	FindByEventAndSpecialization(eventID, specializationID uint, isExtra bool) ([]domain.EventConfig, error)
-	FindByEventID(eventID uint, isExtra bool) ([]domain.EventConfig, error)
+	FindByEventID(eventID uint) ([]domain.EventConfig, error)
 	FindMainConfigsByEventAndSpec(eventID, specializationID uint) ([]domain.EventConfig, error)
 	FindCommonConfigsByEventID(eventID uint) ([]domain.EventConfig, error)
 	FindByTestLink(link string) (*domain.EventConfig, error)
 	Update(config *domain.EventConfig) error
-	UpdateWithTx(tx *gorm.DB, config *domain.EventConfig) error
+	UpdateWithTx(tx *gorm.DB, config *domain.EventConfig, updates domain.EventConfig) error
 	Delete(id uint) error
+	FindByEventSpecializationAndTest(tx *gorm.DB, eventID, specializationID, testID uint) (*domain.EventConfig, error)
+	UpdateFieldsWithTx(tx *gorm.DB, configID uint, updates domain.EventConfig) error
+	UpdateTestLinkWithTx(tx *gorm.DB, configID uint, testLink uuid.UUID) error
+	FindByEventIDWithExtraRules(eventID, specializationID uint) ([]domain.EventConfig, error)
+	FindByEventAndSpecializationAll(eventID, specializationID uint) ([]domain.EventConfig, error)
 }
 
 type eventConfigRepository struct {
@@ -74,13 +80,9 @@ func (r *eventConfigRepository) FindByEventAndSpecialization(eventID, specializa
 	return configs, err
 }
 
-func (r *eventConfigRepository) FindByEventID(eventID uint, isExtra bool) ([]domain.EventConfig, error) {
+func (r *eventConfigRepository) FindByEventID(eventID uint) ([]domain.EventConfig, error) {
 	var configs []domain.EventConfig
-	err := r.db.
-		Where("event_id = ? AND is_extra = ?", eventID, isExtra).
-		Preload("Test").
-		Preload("ExtraThreshold.ExtraConfig").
-		Find(&configs).Error
+	err := r.db.Preload("ExtraThreshold").Where("event_id = ?", eventID).Order("config_id").Find(&configs).Error
 	return configs, err
 }
 
@@ -122,10 +124,54 @@ func (r *eventConfigRepository) Update(config *domain.EventConfig) error {
 	return r.db.Save(config).Error
 }
 
-func (r *eventConfigRepository) UpdateWithTx(tx *gorm.DB, config *domain.EventConfig) error {
-	return tx.Save(config).Error
+func (r *eventConfigRepository) UpdateWithTx(tx *gorm.DB, config *domain.EventConfig, updates domain.EventConfig) error {
+	return tx.Model(config).Updates(updates).Error
+}
+
+func (r *eventConfigRepository) UpdateTestLinkWithTx(tx *gorm.DB, configID uint, testLink uuid.UUID) error {
+	return tx.Model(&domain.EventConfig{}).Where("config_id = ?", configID).Update("test_link", testLink).Error
+}
+
+func (r *eventConfigRepository) UpdateFieldsWithTx(tx *gorm.DB, configID uint, updates domain.EventConfig) error {
+	return tx.Model(&domain.EventConfig{}).Where("config_id = ?", configID).Updates(updates).Error
 }
 
 func (r *eventConfigRepository) Delete(id uint) error {
 	return r.db.Delete(&domain.EventConfig{}, id).Error
+}
+
+func (r *eventConfigRepository) FindByEventSpecializationAndTest(tx *gorm.DB, eventID, specializationID, testID uint) (*domain.EventConfig, error) {
+	var config domain.EventConfig
+	err := tx.Where("event_id = ? AND specialization_id = ? AND test_id = ?", eventID, specializationID, testID).First(&config).Error
+	if err != nil {
+		return nil, err
+	}
+	return &config, nil
+}
+
+func (r *eventConfigRepository) FindByEventIDWithExtraRules(eventID, specializationID uint) ([]domain.EventConfig, error) {
+	var configs []domain.EventConfig
+	query := r.db.
+		Preload("Test").
+		Preload("Test.Questions").
+		Preload("ExtraThreshold").
+		Where("event_id = ?", eventID).
+		Order("config_id ASC")
+	if specializationID > 0 {
+		query = query.Where("specialization_id = ?", specializationID)
+	}
+	err := query.Find(&configs).Error
+	return configs, err
+}
+
+func (r *eventConfigRepository) FindByEventAndSpecializationAll(eventID, specializationID uint) ([]domain.EventConfig, error) {
+	var configs []domain.EventConfig
+	query := r.db.
+		Preload("ExtraThreshold").
+		Where("event_id = ?", eventID)
+	if specializationID > 0 {
+		query = query.Where("specialization_id = ?", specializationID)
+	}
+	err := query.Find(&configs).Error
+	return configs, err
 }

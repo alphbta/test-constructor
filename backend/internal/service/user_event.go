@@ -2,16 +2,16 @@ package service
 
 import (
 	"errors"
+
 	"test-constructor/internal/domain"
 	"test-constructor/internal/dto"
 	"test-constructor/internal/repository"
-
-	"gorm.io/gorm"
 )
 
 type UserEventService interface {
-	CreateUserEvent(userID uint, req dto.CreateUserEventRequest) error
+	CreateUserEvent(userID uint, req dto.CreateUserEventRequest) (*dto.UserEventResponse, error)
 	GetUserEvents(userID uint) (*dto.UserEventsListResponse, error)
+	CreateOrUpdateUserEvent(userEvent *domain.UserEvent) error
 }
 
 type userEventService struct {
@@ -24,53 +24,58 @@ func NewUserEventService(userEventRepo repository.UserEventRepository) UserEvent
 	}
 }
 
-func (s *userEventService) CreateUserEvent(userID uint, req dto.CreateUserEventRequest) error {
-	if req.EventID < 1 {
-		return errors.New("event ID должен быть положительным")
+func (s *userEventService) CreateUserEvent(userID uint, req dto.CreateUserEventRequest) (*dto.UserEventResponse, error) {
+	if req.EventID == 0 {
+		return nil, errors.New("event_id обязателен")
 	}
-
-	if req.ApplicationID < 1 {
-		return errors.New("application ID должен быть положительным")
-	}
-
-	existing, err := s.userEventRepo.FindByUserAndEvent(userID, req.EventID)
-	if err == nil && existing != nil {
-		return errors.New("вы уже записаны на это мероприятие")
-	} else if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return errors.New("ошибка базы данных")
+	if req.ApplicationID == 0 {
+		return nil, errors.New("application_id обязателен")
 	}
 
 	userEvent := domain.UserEvent{
-		UserID:        userID,
-		EventID:       req.EventID,
-		ApplicationID: req.ApplicationID,
+		UserID:           userID,
+		EventID:          req.EventID,
+		SpecializationID: req.SpecializationID,
+		ApplicationID:    req.ApplicationID,
 	}
 
-	if err := s.userEventRepo.Create(&userEvent); err != nil {
-		return errors.New("ошибка создания связи")
+	if err := s.userEventRepo.CreateOrUpdate(userEvent); err != nil {
+		return nil, err
 	}
 
-	return nil
+	return &dto.UserEventResponse{
+		ID:               userEvent.ID,
+		EventID:          userEvent.EventID,
+		SpecializationID: userEvent.SpecializationID,
+		ApplicationID:    userEvent.ApplicationID,
+	}, nil
 }
 
 func (s *userEventService) GetUserEvents(userID uint) (*dto.UserEventsListResponse, error) {
 	userEvents, err := s.userEventRepo.FindByUserID(userID)
 	if err != nil {
-		return nil, errors.New("ошибка получения данных")
+		return nil, err
 	}
 
-	response := &dto.UserEventsListResponse{
-		Events: make([]dto.UserEventResponse, len(userEvents)),
+	events := make([]dto.UserEventResponse, 0, len(userEvents))
+	for _, ue := range userEvents {
+		events = append(events, dto.UserEventResponse{
+			ID:               ue.ID,
+			EventID:          ue.EventID,
+			SpecializationID: ue.SpecializationID,
+			ApplicationID:    ue.ApplicationID,
+		})
 	}
 
-	for i, ue := range userEvents {
-		response.Events[i] = dto.UserEventResponse{
-			ID:            ue.ID,
-			EventID:       ue.EventID,
-			UserID:        ue.UserID,
-			ApplicationID: ue.ApplicationID,
-		}
+	return &dto.UserEventsListResponse{
+		Events: events,
+	}, nil
+}
+
+func (s *userEventService) CreateOrUpdateUserEvent(userEvent *domain.UserEvent) error {
+	if userEvent.UserID == 0 || userEvent.EventID == 0 {
+		return errors.New("user_id и event_id обязательны")
 	}
 
-	return response, nil
+	return s.userEventRepo.CreateOrUpdate(*userEvent)
 }
